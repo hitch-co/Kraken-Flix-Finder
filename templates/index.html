@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Database</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+        }
+        .search-box, .results-box {
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-row {
+            margin-bottom: 10px;
+        }
+        .form-row label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .results-list {
+            list-style: none;
+            padding: 0;
+        }
+        .results-list li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="search-box">
+    <div class="form-row">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name">
+    </div>
+    <div class="form-row">
+        <label for="genre">Genre:</label>
+        <select id="genre" name="genre">
+            <option value="horror">Horror</option>
+            <option value="mystery">Mystery</option>
+            <option value="suspense">Suspense</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="year_min">Min Year:</label>
+        <input type="number" id="year_min" name="year_min">
+        <label for="year_max">Max Year:</label>
+        <input type="number" id="year_max" name="year_max">
+    </div>
+    <button onclick="executeSearch()">Search</button>
+</div>
+
+<div class="results-box">
+    <button onclick="selectAll()">Select All</button>
+    <ul id="results-list" class="results-list">
+        <!-- Search results will be appended here -->
+    </ul>
+</div>
+
+<script>
+    function executeSearch() {
+        // Capture input values
+        var name = document.getElementById('name').value;
+        var genre = document.getElementById('genre').value;
+        var minYear = document.getElementById('year_min').value;
+        var maxYear = document.getElementById('year_max').value;
+
+        // Construct the data object to send
+        var searchData = {
+            name: name,
+            genre: genre,
+            min_year: minYear,
+            max_year: maxYear
+        };
+
+        // Make an AJAX request to the Flask backend
+        fetch('/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(searchData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Call a function to handle the display of search results
+            displayResults(data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    function selectAll() {
+        // Implement the logic to select all checkboxes in the results list.
+        const checkboxes = document.querySelectorAll('.results-list input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+    }
+
+    function displayResults(results) {
+        var resultsList = document.getElementById('results-list');
+        // Clear existing results
+        resultsList.innerHTML = '';
+
+        // Iterate over each result and create a new list item
+        results.forEach(function(result) {
+            var li = document.createElement('li');
+            
+            // Assuming your result dictionaries have a 'title_formatted' key
+            // Adjust according to your actual dictionary structure
+            var text = document.createTextNode(result['title_formatted']);
+            
+            // Append the text node to the list item
+            li.appendChild(text);
+
+            // Optionally, you can add more details from your result dictionary
+            // For example, if you also want to display the movie's ID:
+            // var idText = document.createTextNode(' (ID: ' + result['idMovie'] + ')');
+            // li.appendChild(idText);
+
+            // Append the list item to the results list
+            resultsList.appendChild(li);
+        });
+    }
+</script>
+
+</body>
+</html>

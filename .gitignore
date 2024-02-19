@@ -1,2 +1,5 @@
-sql/test.sql
 classes/__pycache__/
+__pycache__/
+_junk/
+log/
+crube_videos_database.code-workspace

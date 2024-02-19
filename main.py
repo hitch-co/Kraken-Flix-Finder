@@ -2,6 +2,7 @@ from classes.DBExplorer import DBExplorer
 from classes.DBFileCopier import DBFileCopier
 
 #NOTES
+# - NOT WORKING.  Use DBExplorer directly
 # - Need to be careful of source/destination drives.  
 # - Don't currently have a drive to test with
 
@@ -16,9 +17,14 @@ for i, row in enumerate(results):
     if i < 5:
         print(f"Row {i}: {row}")
 
-# DB File Copier
-dbfilecopier = DBFileCopier(destination_folder)
+# Export to CSV
+# dbexplorer.export_to_csv(results=results, file_path='./csv/horror_movies.csv')
+        
 
+# DB File Copier
+dbfilecopier = DBFileCopier()
+
+# for each path, title in items, gr
 for path, title in items:
     source = r'C:\_repos\crube_videos_database\test\sampledata_source'
     destination = r'C:\_repos\crube_videos_database\test\sampledata_destination'

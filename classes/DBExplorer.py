@@ -53,6 +53,13 @@ class DBExplorer:
     def close_connection(self):
         self.conn.close()
 
+    # Write list of tuples to csv
+    def write_to_csv(self, results, file_path):
+        import csv
+        with open(file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(results)
+            
 def main(db_path, query_path):
     dbexplorer = DBExplorer(db_path=db_path)
     sql = dbexplorer.load_sql_file_from_path(path=query_path)
@@ -60,3 +67,12 @@ def main(db_path, query_path):
     for i, row in enumerate(results):
         if i < 5:
             print(f"Row {i}: {row}")
+
+    #write to csv
+    dbexplorer.write_to_csv(results=results, file_path='./csv/horror_movies.csv')
+
+if __name__ == '__main__':
+    db_path = './db/MyVideos116/MyVideos116.db'
+    query_path = './sql/horror_movies_final.sql'
+    main(db_path=db_path, query_path=query_path)
+    

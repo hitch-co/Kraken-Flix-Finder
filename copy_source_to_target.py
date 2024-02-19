@@ -19,10 +19,16 @@ for i, row in enumerate(results):
 
 # Export to CSV
 # dbexplorer.export_to_csv(results=results, file_path='./csv/horror_movies.csv')
-        
 
 # DB File Copier
 dbfilecopier = DBFileCopier()
+
+#Create dummy items to iterate over
+destination_folder = r'C:\_repos\crube_videos_database\test\sampledata_destination'
+items = [
+    {'path': r'C:\_repos\crube_videos_database\test\sampledata_source', 'title': 'sampledata_source'},
+    {'path': r'C:\_repos\crube_videos_database\test\sampledata_source', 'title': 'sampledata_destination'}
+]
 
 # for each path, title in items, gr
 for path, title in items:

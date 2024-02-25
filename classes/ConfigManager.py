@@ -124,6 +124,9 @@ class ConfigManager:
             self.config_dirpath = yaml_config['config_dirpath']
             self.keys_dirpath = yaml_config['keys_dirpath']
 
+            # Flask config items
+            self.flask_login_secret_key = yaml_config['flask_config']['login_secret_key']
+            
             # BQ config items
             self.bq_project_id = yaml_config['bq_config']['project_id']
             self.bq_dataset_id = yaml_config['bq_config']['dataset_id']

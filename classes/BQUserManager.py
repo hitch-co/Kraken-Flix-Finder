@@ -118,12 +118,12 @@ class BQUserManager:
         # Send the query to BQ
         self._send_queryjob_to_bq(query_for_user_insert)
 
-    def check_user_login(self, username, password):
+    def check_user_login(self, username, password) -> tuple[bool, list[dict]]:
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
             self.config.bq_project_id,
             self.config.bq_dataset_id,
             self.config.bq_table_id_user_login
-        )
+            )
         query = f"""
         SELECT DISTINCT * FROM {fully_qualified_table_id}
         WHERE username = '{username}' AND password = '{password}'
@@ -135,10 +135,32 @@ class BQUserManager:
         # Process the results
         results = [row for row in query_job]
         if results:
-            return True
+            return True, results[0]
         else:
-            return False
-        
+            return False, None
+
+    def get_user(self, username):
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_user_login
+        )
+        query = f"""
+        SELECT DISTINCT * FROM {fully_qualified_table_id}
+        WHERE username = '{username}'
+        """
+
+        # Execute the query
+        query_job = self.bq_client.query(query)
+
+        # Process the results
+        results = [row for row in query_job]
+        if results:
+            return results[0]
+        else:
+            return None
+
+
     def ____send_recordsjob_to_bq(self, full_table_id, records:list[dict]) -> None:
         self.logger.info("Starting BigQuery _send_recordsjob_to_bq() job...")
         table = self.bq_client.get_table(full_table_id)
@@ -373,24 +395,25 @@ if __name__ == '__main__':
     config = ConfigManager.initialize(r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml')
     bq_user_manager = BQUserManager()
 
-    # # TEST 1: Check user login
-    # # Generate user records for the user_login table based ont his schema:
-    # new_user_record ={
-    #     "username": "ehitch",
-    #     "email": "unknown",
-    #     "password": "password123",
-    #     # add date created as bq date format
-    #     "date_created": "2024-02-24 00:00:00",
-    #     "is_active": True,
-    #     "is_admin": False
-    #     }
-    # # Execute the new user creation
-    # bq_user_manager.execute_new_user_creation(new_user_record)
+    # TEST 1: Generate user
+    # Generate user records for the user_login table based ont his schema:
+    new_user_record ={
+        "username": "visitor",
+        "email": "unknown",
+        "password": "visitor",
+        "date_created": "2024-02-24 00:00:00",
+        "is_active": True,
+        "is_admin": False
+        }
+    # Execute the new user creation
+    bq_user_manager.execute_new_user_creation(new_user_record)
 
-    # TEST 2: Check user login
-    # Check user login
-    username = "ehitch"
-    password = "123"
-    result = bq_user_manager.check_user_login(username, password)
-    print(f"User {username} login result: {result}")
-    print(f"Type of result: {type(result)}")
+    # # TEST 2: Check user login
+    # # Check user login
+    # username = "ehitch"
+    # password = "123"
+    # result, records = bq_user_manager.check_user_login(username, password)
+    # print(f"User {username} login result: {result}")
+    # print(f"Type of result: {type(result)}")
+    # print(f"Records: {records}")
+

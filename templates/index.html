@@ -54,7 +54,11 @@
 
 <!-- Processed List Box -->
 <div class="processed-list-box">
-    <h3>Processed Items</h3>
+    <div class="processed-header">
+        <span class="processed-title">Processed Items</span>
+        <button id="saveListBtn">Save List As</button>
+        <button id="loadListBtn">Load List</button>
+    </div>
     <ul id="processed-list" class="processed-list">
         <!-- Processed items will be appended here -->
     </ul>
@@ -62,6 +66,8 @@
 
 <script>
     var selectedItems = []
+    window.processedItemsData = [];
+    //var processedItemsData = []
 
     function fetchAndPopulateGenres() {
         // Make an AJAX request to the Flask backend to get the list of genres
@@ -120,6 +126,9 @@
         .then(response => response.json())
         .then(data => {
             console.log('Success:', data);
+            if (data === true) {
+                sessionStorage.setItem('username', data.username)
+            }
             // Call a function to handle the display of search results
             displayLoginResults(result = data);
         })
@@ -251,13 +260,15 @@
     }
 
     function processSelected() {
-        var processedListElement = document.getElementById('processed-list'); // Assume there's an element to display processed items
+        var username = sessionStorage.getItem('username', 'not authenticated');
+        console.log('-####-PROCESSING USERNAME:', username);
+        var processedListElement = document.getElementById('processed-list');
         processedListElement.innerHTML = ''; // Clear existing processed items
 
         // Ensure uniqueness in selectedItems before processing
         const uniqueSelectedItems = selectedItems.reduce((unique, item) => {
-            // Assume item.idPath is a unique identifier for each movie
-            if (!unique.some(uniqueItem => uniqueItem.idPath === item.idPath)) {
+            // Assume item.idMovie is a unique identifier for each movie
+            if (!unique.some(uniqueItem => uniqueItem.idMovie === item.idMovie)) {
                 unique.push(item);
             }
             return unique;
@@ -272,25 +283,39 @@
             var li = document.createElement('li');
 
             // Construct a string or create elements to display the details you're interested in
-            var details = `Movie: ${item.title_formatted}, ID: ${item.idMovie}, Path: ${item.strPath}`;
+            var details = `${item.title_formatted} (ID: ${item.idMovie})`;
 
-            // Append the details to the list item
+            // Append the details to the list item and the list item to the DOM
             li.appendChild(document.createTextNode(details));
-
-            // Append the list item to the processed list
             processedListElement.appendChild(li);
-        });
 
-        // NOTE: Will likely be where we start to save users favorites
-        // Optionally, you can do other things with the uniqueSelectedItems 
-        // array here, such as sending the data to a server or storing it for 
-        // further use.
+            // Add item data to the processedItemsData array
+            list_item = {
+                username: username,
+                idMovie: item.idMovie,
+                title_formatted: item.title_formatted,
+                idFile: item.idFile,
+                genre_id: item.genre_id,
+                release_year: item.release_year
+            }
+            //processedItemsData.push(list_item);
+            window.processedItemsData.push(list_item);
+
+        });
     }
+
+    // // NOTE: Will likely be where we start to save users favorites
+    // // Optionally, you can do other things with the uniqueSelectedItems 
+    // // array here, such as sending the data to a server or storing it for 
+    // // further use.
+    // function saveList() {
+    //     // Implement the logic to save the uniqueSelectedItems array
+    //     // to a file or send it to a server.
+    //     console.log('Saving list:', uniqueSelectedItems);
+    // }
 
     function on_load_do_things() {
         fetchAndPopulateGenres();
-        // document.getElementById('year_min').value = "1900";
-        // document.getElementById('year_max').value = "3000";
     }
 
     window.onload = on_load_do_things;

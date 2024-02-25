@@ -40,7 +40,7 @@ body {
     flex: none; /* Button width based on its content */
     padding: 5px 10px; /* Adjust padding as needed */
 }
-.results-box {
+.results-box, .processed-list-box {
     margin: 10px;
     padding: 20px;
     border: 1px solid #ccc;
@@ -51,7 +51,7 @@ body {
     max-height: 200px;
     overflow-y: auto; /* Enable vertical scrolling when necessary */
 }
-.processed-list-box {
+/* .processed-list-box {
     margin: 10px;
     padding: 20px;
     border: 1px solid #ccc;
@@ -61,14 +61,38 @@ body {
     overflow-x: auto;
     max-height: 200px;
     overflow-y: auto;
-}
-.results-list, .processed-list {
+} */
+.results-list {
     list-style: none;
     padding: 0;
 }
 
+.processed-list {
+    margin-bottom: 5px; /* Maintain some space below each item */
+    padding: 10px; /* Add padding to give content some breathing room */
+    border-bottom: 1px solid #ccc; /* Add a light line below each item */
+}
 .results-list li, .processed-list li {
     margin-bottom: 5px;
+}
+.processed-list li:last-child {
+    border-bottom: none; /* Remove the border from the last item */
+}
+
+.processed-header {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Align items vertically */
+    justify-content: space-between; /* Space out title and buttons */
+    margin-bottom: 10px; /* Add some space between header and list */
+}
+
+.processed-title {
+    font-size: 1.5em; /* Adjust title size as needed */
+}
+
+#saveListBtn, #loadListBtn {
+    padding: 5px 10px; /* Adjust padding as needed */
+    margin-left: 5px; /* Add some space between buttons */
 }
 
 .year-row input {

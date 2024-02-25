@@ -1,9 +1,13 @@
-from flask import Flask, jsonify, request, render_template
-from classes.DBExplorer import DBExplorer
+from flask import Flask
+from flask import session, jsonify, request, render_template
+from flask_login import LoginManager, login_user, current_user
+from datetime import timedelta
 
+from classes.DBExplorer import DBExplorer
 from classes.ConfigManager import ConfigManager
 from classes.BQUserManager import BQUserManager
 from classes.LoggingManager import LoggingManager
+from classes.User import User
 
 class MyFlaskApp:
     def __init__(
@@ -35,6 +39,15 @@ class MyFlaskApp:
             # Flask app instance
             self.app = Flask(__name__)
             self.setup_routes()
+            self.app.config['SECRET_KEY'] = self.config.flask_login_secret_key
+            self.login_manager = LoginManager()
+            self.login_manager.init_app(self.app)
+            self.app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+
+            @self.login_manager.user_loader
+            def load_user(username):
+                return User.get(username=username)
+
 
         except Exception as e:
             print(f"Error in MyFlaskApp.__init__(): {e}")
@@ -46,9 +59,6 @@ class MyFlaskApp:
 
         @self.app.route('/genres', methods=['GET'])
         def genres():
-
-            ############################################################
-            # Should probably be moved to a separate function
             dbexplorer = DBExplorer(db_path=self.db_path)
             query_path = './sql/get_genres.sql'
             query = dbexplorer.load_sql_file_from_path(path=query_path)
@@ -62,9 +72,6 @@ class MyFlaskApp:
                         
         @self.app.route('/search', methods=['POST'])
         def search():
-
-            ############################################################
-            # Should probably be moved to a separate function
             dbexplorer = DBExplorer(db_path=self.db_path)
             query_path = './sql/front-end-search-query.sql'
             query = dbexplorer.load_sql_file_from_path(path=query_path)
@@ -88,28 +95,24 @@ class MyFlaskApp:
 
             self.logger.debug(f"JSONified results: {jsonified_results}")
             return jsonified_results
-
-        @self.app.route('/account', methods=['GET', 'POST'])
-        def account():
-            if request.method == 'POST':
-                # Account creation or update logic goes here
-                return jsonify({'message': 'Account created/updated successfully'})
-            else:
-                # Account information retrieval logic goes here
-                return jsonify({'message': 'Displaying account information'})
-            
+    
         @self.app.route('/login/users', methods=['POST'])
-        def check_login():
+        def login():
             try:
                 data = request.json
                 username = data.get('user_login', 'notta')
                 password = data.get('user_password', 'notta')
+                remember = request.form.get('remember', False) # not in use yet
 
-                result = self.bq_user_manager.check_user_login(username, password)
+                result, record = self.bq_user_manager.check_user_login(username, password)
                 self.logger.info(f"Type of result: {type(result)}")
-                
-                if username == 'visitor':
-                    return jsonify(True)
+
+                if result is True:
+                    user = User.get(username)
+                    login_user(user, remember=remember)
+                    session.permanent = True
+                    self.logger.info(f"User {username} login result: {result}")
+                    return jsonify(result)
                 
                 self.logger.info(f"User {username} login result: {result}")
                 return jsonify(result)

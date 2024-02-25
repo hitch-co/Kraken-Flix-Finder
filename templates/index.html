@@ -126,11 +126,13 @@
         .then(response => response.json())
         .then(data => {
             console.log('Success:', data);
-            if (data === true) {
-                sessionStorage.setItem('username', data.username)
+            if (data['result'] === true) {
+                logged_in_username = data['record']['username']
+                sessionStorage.setItem('username', logged_in_username)
+                console.log('Logged in username:', logged_in_username);
             }
             // Call a function to handle the display of search results
-            displayLoginResults(result = data);
+            displayLoginResults(result = data['result']);
         })
         .catch((error) => {
             console.error('Error:', error);
@@ -262,45 +264,41 @@
     function processSelected() {
         var username = sessionStorage.getItem('username', 'not authenticated');
         console.log('-####-PROCESSING USERNAME:', username);
-        var processedListElement = document.getElementById('processed-list');
-        processedListElement.innerHTML = ''; // Clear existing processed items
 
-        // Ensure uniqueness in selectedItems before processing
-        const uniqueSelectedItems = selectedItems.reduce((unique, item) => {
-            // Assume item.idMovie is a unique identifier for each movie
-            if (!unique.some(uniqueItem => uniqueItem.idMovie === item.idMovie)) {
-                unique.push(item);
+        // Process selected items and update window.processedItemsData
+        selectedItems.forEach(function(item) {
+            // Check if item is already in the processedItemsData based on idMovie
+            const isItemProcessed = window.processedItemsData.some(processedItem => processedItem.idMovie === item.idMovie);
+
+            if (!isItemProcessed) {
+                // Prepare item data
+                let listItem = {
+                    username: username,
+                    idMovie: item.idMovie,
+                    title_formatted: item.title_formatted,
+                    idFile: item.idFile,
+                    genre_id: item.genre_id,
+                    release_year: item.release_year
+                };
+
+                // Add new unique item to window.processedItemsData
+                window.processedItemsData.push(listItem);
             }
-            return unique;
-        }, []);
-
-        // Sort the selectedItems array by the title_formatted property
-        uniqueSelectedItems.sort(function(movieA, movieB) {
-            return movieA.title_formatted.localeCompare(movieB.title_formatted);
         });
 
-        uniqueSelectedItems.forEach(function(item) {
+        // Update the DOM based on the unique items in window.processedItemsData
+        var processedListElement = document.getElementById('processed-list');
+        processedListElement.innerHTML = ''; // Clear existing processed items before redisplay
+
+        // Sort window.processedItemsData if needed
+        window.processedItemsData.sort((movieA, movieB) => movieA.title_formatted.localeCompare(movieB.title_formatted));
+
+        // Redisplay items from window.processedItemsData
+        window.processedItemsData.forEach(function(item) {
             var li = document.createElement('li');
-
-            // Construct a string or create elements to display the details you're interested in
             var details = `${item.title_formatted} (ID: ${item.idMovie})`;
-
-            // Append the details to the list item and the list item to the DOM
             li.appendChild(document.createTextNode(details));
             processedListElement.appendChild(li);
-
-            // Add item data to the processedItemsData array
-            list_item = {
-                username: username,
-                idMovie: item.idMovie,
-                title_formatted: item.title_formatted,
-                idFile: item.idFile,
-                genre_id: item.genre_id,
-                release_year: item.release_year
-            }
-            //processedItemsData.push(list_item);
-            window.processedItemsData.push(list_item);
-
         });
     }
 

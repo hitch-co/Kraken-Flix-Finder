@@ -124,8 +124,11 @@ class BQUserManager:
             self.config.bq_dataset_id,
             self.config.bq_table_id_user_login
             )
+        
         query = f"""
-        SELECT DISTINCT * FROM {fully_qualified_table_id}
+        SELECT DISTINCT
+            username, email, date_created, is_active, is_admin 
+        FROM {fully_qualified_table_id}
         WHERE username = '{username}' AND password = '{password}'
         """
 

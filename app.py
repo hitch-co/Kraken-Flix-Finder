@@ -105,17 +105,33 @@ class MyFlaskApp:
                 remember = request.form.get('remember', False) # not in use yet
 
                 result, record = self.bq_user_manager.check_user_login(username, password)
-                self.logger.info(f"Type of result: {type(result)}")
+                self.logger.info(f"check_user_login result: {result}")
+                self.logger.info(f"check_user_login record: {record}")
+                
+                # Define the field names here, inside the login function, before using them
+                field_names = ['username', 'email', 'date_created', 'is_active', 'is_admin']
 
-                if result is True:
+                # Convert 'record' Row object to a dictionary
+                if record:
+                    record_dict = {field: record[i] for i, field in enumerate(field_names)}
+                else:
+                    record_dict = {}
+
+                json_object = {'result': result, 'record': record_dict}
+                self.logger.info(f"Type of record: {type(record_dict)}")
+                self.logger.info(f"Content of record: {record_dict}")
+                self.logger.info(f"Type of result: {type(result)}")
+                self.logger.info(f"Content of result: {result}")
+
+                if json_object['result'] is True:
                     user = User.get(username)
                     login_user(user, remember=remember)
                     session.permanent = True
-                    self.logger.info(f"User {username} login result: {result}")
-                    return jsonify(result)
+                    self.logger.info(f"User {username} login result: {json_object['result']}")
+                    return jsonify(json_object)
                 
-                self.logger.info(f"User {username} login result: {result}")
-                return jsonify(result)
+                self.logger.info(f"User {username} login result: {json_object['result']}")
+                return jsonify(json_object)
                             
             except Exception as e:
                 self.logger.error(f"Error in get_users(): {e}")

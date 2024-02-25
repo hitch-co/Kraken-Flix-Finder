@@ -3,52 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/search_page.css">
     <title>Movie Database</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            padding-top: 20px;
-        }
-        .search-box, .results-box {
-            margin: 10px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            max-height: 400px; /* Adjust the max-height as needed */
-            overflow-y: auto; /* Show scrollbar when content overflows */
-        }
-        .form-row {
-            margin-bottom: 10px;
-        }
-        .form-row label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .results-list {
-            list-style: none;
-            padding: 0;
-        }
-        .results-list li {
-            margin-bottom: 5px;
-        }
-        .processed-list-box {
-            margin: 10px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .processed-list {
-            list-style: none;
-            padding: 0;
-        }
-        .processed-list li {
-            margin-bottom: 5px;
-        }
-    </style>
 </head>
+
 <body>
 
+<!-- Login Box -->
+<div class="login-box">
+    <form onsubmit="executeUserLogin(); return false;" class="login-row">
+        <input type="text" id="user_login" name="user_login" placeholder="Username">
+        <input type="password" id="user_password" name="user_password" placeholder="Password">
+        <button type="submit">Login</button>
+        <label for="login_status_label">Login Status:</label>
+        <span id="login_status_message"></span>
+    </form>
+</div>
+
+<!-- Search Box -->
 <div class="search-box">
     <div class="form-row">
         <label for="movie_name">Name:</label>
@@ -61,16 +33,16 @@
             <!-- Genres will be appended here -->
         </select>
     </div>
-    <div class="form-row">
+    <div class="form-row year-row">
         <label for="year_min">Min Year:</label>
         <input type="number" id="year_min" name="year_min">
         <label for="year_max">Max Year:</label>
         <input type="number" id="year_max" name="year_max">
     </div>
     <button onclick="executeSearch()">Search</button>
-    
 </div>
 
+<!-- Results Box -->
 <div class="results-box">
     <button onclick="selectAll()">Select All</button>
     <button onclick="selectNone()">Deselect All</button>
@@ -80,6 +52,7 @@
     </ul>
 </div>
 
+<!-- Processed List Box -->
 <div class="processed-list-box">
     <h3>Processed Items</h3>
     <ul id="processed-list" class="processed-list">
@@ -119,6 +92,66 @@
         .catch(error => console.error('Error fetching genres:', error));
     }
 
+    function executeUserLogin() {
+        // Capture input values
+        var userLogin = document.getElementById('user_login').value;
+        var userPassword = document.getElementById('user_password').value;
+        
+        //show in the console the username/password
+        console.log("starting executeUserLogin")
+        console.log("These are the values of the user login and password")
+        console.log(userLogin);
+        console.log(userPassword);
+
+        // Construct the data object to send
+        var loginData = {
+            user_login: userLogin,
+            user_password: userPassword
+        };
+
+        // Make an AJAX request to the Flask backend
+        fetch('login/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Call a function to handle the display of search results
+            displayLoginResults(result = data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    function displayLoginResults(result) {
+    // Get the element where the login status message will be displayed
+    var loginStatusMessage = document.getElementById('login_status_message');
+
+        console.log("starting displayLoginResults")
+        console.log(result)
+        console.log(typeof result)
+
+        // Check if the login was successful or not and set the message accordingly
+        if (result === true) {
+            console.log('Result: True, Login successful');
+            loginStatusMessage.textContent = "Login sucessful!"; // Set the text content to the message from the server
+            loginStatusMessage.style.color = 'green'; // Optional: Change text color for successful login
+        } else if (result === false) {
+            console.log('Result: False, Login failed');
+            loginStatusMessage.textContent = "Login failed, use 'visitor' as username iuw"; // Set the text content to a default message
+            loginStatusMessage.style.color = 'red'; // Optional: Change text color for failed login
+        } else {
+            console.log('Result: Error, An error occurred');
+            loginStatusMessage.textContent = 'An error occurred';
+            loginStatusMessage.style.color = 'red'; // Optional: Change text color for other errors
+        }
+    }
+
     function executeSearch() {
         // Capture input values
         var movieName = document.getElementById('movie_name').value;
@@ -146,14 +179,14 @@
         .then(data => {
             console.log('Success:', data);
             // Call a function to handle the display of search results
-            displayResults(data);
+            displaySearchResults(data);
         })
         .catch((error) => {
             console.error('Error:', error);
         });
     }
 
-    function displayResults(results) {
+    function displaySearchResults(results) {
         var resultsList = document.getElementById('results-list');
         resultsList.innerHTML = '';
 
@@ -256,8 +289,8 @@
 
     function on_load_do_things() {
         fetchAndPopulateGenres();
-        document.getElementById('year_min').value = "1900";
-        document.getElementById('year_max').value = "3000";
+        // document.getElementById('year_min').value = "1900";
+        // document.getElementById('year_max').value = "3000";
     }
 
     window.onload = on_load_do_things;

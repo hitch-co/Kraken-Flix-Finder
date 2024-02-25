@@ -9,10 +9,10 @@ WITH movies AS (
     FROM movie as m
     LEFT JOIN genre_link as gl 
         ON gl.media_id = m.idMovie
-    WHERE genre_id = :uinp_genre_id
+    WHERE (:uinp_genre_id IS NULL OR :uinp_genre_id = genre_id)
     AND UPPER(m.c00) LIKE UPPER(:uinp_movie_name)
-    AND CAST(strftime('%Y', m.premiered) AS INTEGER) >= :uinp_year_min
-    AND CAST(strftime('%Y', m.premiered) AS INTEGER) <= :uinp_year_max
+    AND (CAST(strftime('%Y', m.premiered) AS INTEGER) >= :uinp_year_min OR :uinp_year_min IS NULL)
+    AND (CAST(strftime('%Y', m.premiered) AS INTEGER) <= :uinp_year_max OR :uinp_year_max IS NULL)
 )
 
 SELECT DISTINCT

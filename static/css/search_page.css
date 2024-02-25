@@ -1,0 +1,76 @@
+body {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center-align the child elements */
+    padding-top: 20px;
+}
+
+.login-box, .search-box, .results-box {
+    margin: 10px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%; /* Set a width for the boxes */
+    max-width: 600px; /* Maximum width for the boxes */
+}
+
+.login-row {
+    display: flex; /* Use flexbox for layout */
+    flex-wrap: wrap; /* Allow items to wrap as needed */
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Add some spacing between elements */
+}
+
+.form-row, .year-row {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Align items vertically */
+    margin-bottom: 10px;
+}
+
+.form-row label, .login-row label, .year-row label {
+    margin-right: 10px; /* Add some spacing between label and input */
+}
+
+.login-row input, .login-row button, .year-row input {
+    flex: 1; /* Inputs and button will take up equal space */
+    margin-right: 10px; /* Add some spacing between elements */
+}
+
+.login-row button {
+    flex: none; /* Button width based on its content */
+    padding: 5px 10px; /* Adjust padding as needed */
+}
+.results-box {
+    margin: 10px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+    overflow-x: auto; /* Enable horizontal scrolling when necessary */
+    max-height: 200px;
+    overflow-y: auto; /* Enable vertical scrolling when necessary */
+}
+.processed-list-box {
+    margin: 10px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+    overflow-x: auto;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.results-list, .processed-list {
+    list-style: none;
+    padding: 0;
+}
+
+.results-list li, .processed-list li {
+    margin-bottom: 5px;
+}
+
+.year-row input {
+    width: 80px; /* Set a fixed width for year inputs */
+}

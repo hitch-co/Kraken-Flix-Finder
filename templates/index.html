@@ -46,7 +46,7 @@
 <div class="results-box">
     <button onclick="selectAll()">Select All</button>
     <button onclick="selectNone()">Deselect All</button>
-    <button onclick="processSelected()">Process Selected</button>
+    <button onclick="processAndDisplaySelected()">Add to List</button>
     <ul id="results-list" class="results-list">
         <!-- Search results will be appended here -->
     </ul>
@@ -63,8 +63,9 @@
             <!-- Additional options will be added here dynamically -->
         </select>
 
-        <button id="saveListBtn">Save List As</button>
+        <button id="saveListBtn">Save List</button>
         <button id="loadListBtn" onclick="executeGetSavedListItems()">Load List</button>
+        <button id="saveAsListBtn">Save As New List</button>
     </div>
     <ul id="processed-list" class="processed-list">
         <!-- Processed items will be appended here -->
@@ -74,36 +75,7 @@
 <script>
     var selectedItems = []
     window.processedItemsData = [];
-    //var processedItemsData = []
-
-    function fetchAndPopulateGenres() {
-        // Make an AJAX request to the Flask backend to get the list of genres
-        fetch('/genres', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(genres => {
-            const genreSelect = document.getElementById('genre');
-            genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre.id;
-                option.text = genre.name;
-                genreSelect.appendChild(option);
-            });
-
-            // Event listener to track selected items
-            genreSelect.addEventListener('change', function() {
-                // 'this' refers to the genreSelect element
-                const selectedGenre = this.options[this.selectedIndex];
-                // Log the genre and id in a single line
-                console.log(`Selected genre: ${selectedGenre.text} (ID: ${selectedGenre.value})`); 
-            });
-        })
-        .catch(error => console.error('Error fetching genres:', error));
-    }
+    var selectedSearchItems = []
 
     function executeGetSavedListItems() {
         // Capture input values
@@ -126,94 +98,63 @@
         .then(response => response.json())
         .then(data => {
             console.log('Success with executeGetSavedListItems:', data);
-            displaySavedListItems(data);
+            _displaySavedListItems(data);
         })
         .catch((error) => {
             console.error('Error:', error);
         });
     }
 
-    function fetchAndPopulateSavedLists() {
-        fetch('/get_saved_list_names', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(lists => {
-            const savedListsDropdown = document.getElementById('saved-lists-dropdown');
-            savedListsDropdown.innerHTML = ''; // Clear existing options
-
-            if (lists.length === 0) {
-                // Handle case where no lists are returned
-                const option = document.createElement('option');
-                option.value = 'No lists saved';
-                option.text = 'No lists saved';
-                savedListsDropdown.appendChild(option);
-                console.log('No lists saved');
-            } else {
-                // Populate the dropdown with saved lists
-                lists.forEach(list => {
-                    const option = document.createElement('option');
-                    option.value = list.list_name; // Assuming each list has an 'id'
-                    option.text = list.list_name; // Assuming each list has a 'name'
-                    savedListsDropdown.appendChild(option);
-                    console.log('Saved list:', list.list_name);
-                });
-            }
-
-            // Event listener to track selected items
-            savedListsDropdown.addEventListener('change', function() {
-                const selectedList = this.options[this.selectedIndex];
-                console.log(`Selected list: ${selectedList.text} (ID: ${selectedList.value})`); 
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching saved lists:', error);
-            // Consider updating the UI to reflect the error state
-        });
-    }
-
-    function displaySavedListItems(data) {
+    function _displaySavedListItems(data) {
         // Get the element where the saved list items will be displayed
-        console.log('displaySavedListItems() Saved list items:', data);
-        var savedListItems = document.getElementById('processed-list');
-        savedListItems.innerHTML = '';
+        console.log('_displaySavedListItems() Saved list items:', data);
 
-        // 
+        // Ensure window.processedItemsData is initialized
+        window.processedItemsData = []
 
-        data.forEach(function(item, index) {
+        // Update window.processedItemsData with new items, checking for duplicates
+        data.forEach(function(item) {
+            const isItemProcessed = window.processedItemsData.some(processedItem => processedItem.idMovie === item.idMovie);
+            if (!isItemProcessed) {
+                window.processedItemsData.push(item);
+            }
+        });
+            
+        // Deduplicate window.processedItemsData
+        window.processedItemsData = window.processedItemsData.filter((item, index, self) =>
+            index === self.findIndex((t) => t.idMovie === item.idMovie)
+        );
+
+        // Sort window.processedItemsData
+        window.processedItemsData.sort((movieA, movieB) => movieA.title_formatted.localeCompare(movieB.title_formatted));
+
+        // Update the DOM based on the unique items in window.processedItemsData
+        var processedListElement = document.getElementById('processed-list');
+        processedListElement.innerHTML = ''; // Clear existing items
+
+        window.processedItemsData.forEach(function(item, index) {
             var li = document.createElement('li');
-
-            // Create a checkbox for each saved list item
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.id = 'saved-item-' + index;  // Unique ID for each checkbox
-            checkbox.value = index;  // Use index or any unique identifier from your result
+            checkbox.id = 'saved-item-' + index;
+            checkbox.value = index;
+            li.appendChild(checkbox);
 
-            // Optional: Store the entire result object as a data attribute
-            // This can be useful if you want to use other properties of the result later
-            checkbox.dataset.result = JSON.stringify(item);
-
-            // Event listener to track selected items
+            // Reintroduce the event listener for each checkbox
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
-                    selectedItems.push(item);  // Add to the selected items list
+                    // Add to the selectedItems array if checked
+                    selectedItems.push(item);
                 } else {
-                    // Remove from the selected items list if unchecked
-                    selectedItems = selectedItems.filter(selectedItem => JSON.stringify(selectedItem) !== JSON.stringify(item));
+                    // Remove from the selectedItems array if unchecked
+                    selectedItems = selectedItems.filter(selectedItem => selectedItem.idMovie !== item.idMovie);
                 }
                 console.log(selectedItems);
             });
 
-            // Append the checkbox and result text to the list item
-            li.appendChild(checkbox);
-            var text = document.createTextNode(item['title_formatted']);
+            var text = document.createTextNode(`${item.title_formatted} (ID: ${item.idMovie})`);
             li.appendChild(text);
-
-            // Append the list item to the results list
-            savedListItems.appendChild(li);
+            processedListElement.appendChild(li);
         });
     }
 
@@ -251,38 +192,80 @@
                 console.log('Logged in username:', logged_in_username);
             }
             // Call a function to handle the display of search results
-            displayLoginResults(result = data['result']);
+            _displayLoginResults(result = data['result']);
 
             // Now that the user is logged in, fetch and populate saved lists 
-            fetchAndPopulateSavedLists();
+            _displayUsersListNamesAfterLogin();
         })
         .catch((error) => {
             console.error('Error:', error);
         });
     }
+    
+    function _displayUsersListNamesAfterLogin() {
+        fetch('/get_saved_list_names', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(lists => {
+            const savedListsDropdown = document.getElementById('saved-lists-dropdown');
+            savedListsDropdown.innerHTML = ''; // Clear existing options
 
-    function displayLoginResults(result) {
-    // Get the element where the login status message will be displayed
-    var loginStatusMessage = document.getElementById('login_status_message');
+            if (lists.length === 0) {
+                // Handle case where no lists are returned
+                const option = document.createElement('option');
+                option.value = 'No lists saved';
+                option.text = 'No lists saved';
+                savedListsDropdown.appendChild(option);
+                console.log('No lists saved');
+            } else {
+                // Populate the dropdown with saved lists
+                lists.forEach(list => {
+                    const option = document.createElement('option');
+                    option.value = list.list_name; 
+                    option.text = list.list_name;
+                    savedListsDropdown.appendChild(option);
+                    console.log('Saved list:', list.list_name);
+                });
+            }
 
-        console.log("starting displayLoginResults")
-        console.log(result)
-        console.log(typeof result)
+            // Event listener to track selected items
+            savedListsDropdown.addEventListener('change', function() {
+                const selectedList = this.options[this.selectedIndex];
+                console.log(`Selected list: ${selectedList.text} (ID: ${selectedList.value})`); 
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching saved lists:', error);
+            // Consider updating the UI to reflect the error state
+        });
+    }
 
-        // Check if the login was successful or not and set the message accordingly
-        if (result === true) {
-            console.log('Result: True, Login successful');
-            loginStatusMessage.textContent = "Login sucessful!"; // Set the text content to the message from the server
-            loginStatusMessage.style.color = 'green'; // Optional: Change text color for successful login
-        } else if (result === false) {
-            console.log('Result: False, Login failed');
-            loginStatusMessage.textContent = "Login failed, use 'visitor' as username iuw"; // Set the text content to a default message
-            loginStatusMessage.style.color = 'red'; // Optional: Change text color for failed login
-        } else {
-            console.log('Result: Error, An error occurred');
-            loginStatusMessage.textContent = 'An error occurred';
-            loginStatusMessage.style.color = 'red'; // Optional: Change text color for other errors
-        }
+    function _displayLoginResults(result) {
+        // Get the element where the login status message will be displayed
+        var loginStatusMessage = document.getElementById('login_status_message');
+
+            console.log("starting _displayLoginResults")
+            console.log(result)
+            console.log(typeof result)
+
+            // Check if the login was successful or not and set the message accordingly
+            if (result === true) {
+                console.log('Result: True, Login successful');
+                loginStatusMessage.textContent = "Login sucessful!"; // Set the text content to the message from the server
+                loginStatusMessage.style.color = 'green'; // Optional: Change text color for successful login
+            } else if (result === false) {
+                console.log('Result: False, Login failed');
+                loginStatusMessage.textContent = "Login failed, use 'visitor' as username iuw"; // Set the text content to a default message
+                loginStatusMessage.style.color = 'red'; // Optional: Change text color for failed login
+            } else {
+                console.log('Result: Error, An error occurred');
+                loginStatusMessage.textContent = 'An error occurred';
+                loginStatusMessage.style.color = 'red'; // Optional: Change text color for other errors
+            }
     }
 
     function executeSearch() {
@@ -312,14 +295,14 @@
         .then(data => {
             console.log('Success:', data);
             // Call a function to handle the display of search results
-            displaySearchResults(data);
+            _displaySearchResults(data);
         })
         .catch((error) => {
             console.error('Error:', error);
         });
     }
 
-    function displaySearchResults(results) {
+    function _displaySearchResults(results) {
         var resultsList = document.getElementById('results-list');
         resultsList.innerHTML = '';
 
@@ -339,17 +322,18 @@
             // Event listener to track selected items
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
-                    selectedItems.push(result);  // Add to the selected items list
+                    selectedSearchItems.push(result);  // Add to the selected items list
                 } else {
                     // Remove from the selected items list if unchecked
-                    selectedItems = selectedItems.filter(item => JSON.stringify(item) !== JSON.stringify(result));
+                    selectedSearchItems = selectedSearchItems.filter(item => JSON.stringify(item) !== JSON.stringify(result));
                 }
-                console.log(selectedItems);
+                console.log(selectedSearchItems);
             });
 
             // Append the checkbox and result text to the list item
             li.appendChild(checkbox);
-            var text = document.createTextNode(result['title_formatted']);
+            var text = document.createTextNode(`${result.title_formatted} (ID: ${result.idMovie})`)
+            // var text = document.createTextNode(`${result['title_formatted']} (ID: ${result[idMovie]})`)
             li.appendChild(text);
 
             // Append the list item to the results list
@@ -357,6 +341,82 @@
         });
     }
 
+    function processAndDisplaySelected() {
+        var username = sessionStorage.getItem('username', 'not authenticated'); //TODO Does this need to be here?
+        
+        console.log('Processing selected items:')
+        console.log(selectedSearchItems);
+
+        // Ensure window.processedItemsData is initialized
+        if (!window.processedItemsData) {
+            window.processedItemsData = [];
+        }
+
+        // Process selected items and update window.processedItemsData
+        selectedSearchItems.forEach(function(item) {
+            
+            // Check if item is already in the processedItemsData based on idMovie
+            const isItemProcessed = window.processedItemsData.some(processedItem => processedItem.idMovie === item.idMovie);
+
+            if (!isItemProcessed) {
+                // Prepare item data
+                let listItem = {
+                    username: username,
+                    idMovie: item.idMovie,
+                    title_formatted: item.title_formatted,
+                    idFile: item.idFile,
+                    genre_id: item.genre_id,
+                    release_year: item.release_year
+                };
+
+                // Add new unique item to window.processedItemsData
+                window.processedItemsData.push(listItem);
+            }
+        });
+
+        // Deduplicate window.processedItemsData
+        window.processedItemsData = window.processedItemsData.filter((item, index, self) =>
+            index === self.findIndex((t) => t.idMovie === item.idMovie)
+        );
+
+        // Sort window.processedItemsData if needed
+        window.processedItemsData.sort((movieA, movieB) => movieA.title_formatted.localeCompare(movieB.title_formatted));
+
+        // Update the DOM based on the unique items in window.processedItemsData
+        var processedListElement = document.getElementById('processed-list');
+        processedListElement.innerHTML = ''; // Clear existing processed items before redisplay
+
+        window.processedItemsData.forEach(function(item, index) {
+            var li = document.createElement('li');
+
+            // Create a checkbox for each saved list item
+            var checkbox = document.createElement('input');
+            checkbox.checked = false;
+            checkbox.type = 'checkbox';
+            checkbox.id = 'saved-item-' + index;
+            checkbox.value = index;
+            li.appendChild(checkbox);
+
+            // Append the checkbox and result text to the list item
+            var text = document.createTextNode(`${item.title_formatted} (ID: ${item.idMovie})`);
+            li.appendChild(text);
+
+            // Append the list item to the results list
+            processedListElement.appendChild(li);
+
+        });
+    }
+
+    // // NOTE: Will likely be where we start to save users favorites
+    // // Optionally, you can do other things with the uniqueSelectedItems 
+    // // array here, such as sending the data to a server or storing it for 
+    // // further use.
+    // function saveList() {
+    //     // Implement the logic to save the uniqueSelectedItems array
+    //     // to a file or send it to a server.
+    //     console.log('Saving list:', uniqueSelectedItems);
+    // }
+  
     function selectAll() {
         // Implement the logic to select all checkboxes in the results list.
         const checkboxes = document.querySelectorAll('.results-list input[type="checkbox"]');
@@ -383,61 +443,37 @@
         });
     }
 
-    function processSelected() {
-        var username = sessionStorage.getItem('username', 'not authenticated'); //TODO Does this need to be here?
-        
-        console.log('Processing selected items:')
-        console.log(selectedItems);
-
-        // Process selected items and update window.processedItemsData
-        selectedItems.forEach(function(item) {
-            // Check if item is already in the processedItemsData based on idMovie
-            const isItemProcessed = window.processedItemsData.some(processedItem => processedItem.idMovie === item.idMovie);
-
-            if (!isItemProcessed) {
-                // Prepare item data
-                let listItem = {
-                    username: username,
-                    idMovie: item.idMovie,
-                    title_formatted: item.title_formatted,
-                    idFile: item.idFile,
-                    genre_id: item.genre_id,
-                    release_year: item.release_year
-                };
-
-                // Add new unique item to window.processedItemsData
-                window.processedItemsData.push(listItem);
+    function _fetchAndDisplayGenres() {
+        // Make an AJAX request to the Flask backend to get the list of genres
+        fetch('/genres', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
             }
-        });
+        })
+        .then(response => response.json())
+        .then(genres => {
+            const genreSelect = document.getElementById('genre');
+            genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.text = genre.name;
+                genreSelect.appendChild(option);
+            });
 
-        // Update the DOM based on the unique items in window.processedItemsData
-        var processedListElement = document.getElementById('processed-list');
-        processedListElement.innerHTML = ''; // Clear existing processed items before redisplay
-
-        // Sort window.processedItemsData if needed
-        window.processedItemsData.sort((movieA, movieB) => movieA.title_formatted.localeCompare(movieB.title_formatted));
-
-        // Redisplay items from window.processedItemsData
-        window.processedItemsData.forEach(function(item) {
-            var li = document.createElement('li');
-            var details = `${item.title_formatted} (ID: ${item.idMovie})`;
-            li.appendChild(document.createTextNode(details));
-            processedListElement.appendChild(li);
-        });
+            // Event listener to track selected items
+            genreSelect.addEventListener('change', function() {
+                // 'this' refers to the genreSelect element
+                const selectedGenre = this.options[this.selectedIndex];
+                // Log the genre and id in a single line
+                console.log(`Selected genre: ${selectedGenre.text} (ID: ${selectedGenre.value})`); 
+            });
+        })
+        .catch(error => console.error('Error fetching genres:', error));
     }
 
-    // // NOTE: Will likely be where we start to save users favorites
-    // // Optionally, you can do other things with the uniqueSelectedItems 
-    // // array here, such as sending the data to a server or storing it for 
-    // // further use.
-    // function saveList() {
-    //     // Implement the logic to save the uniqueSelectedItems array
-    //     // to a file or send it to a server.
-    //     console.log('Saving list:', uniqueSelectedItems);
-    // }
-
     function on_load_do_things() {
-        fetchAndPopulateGenres();
+        _fetchAndDisplayGenres();
     }
 
     window.onload = on_load_do_things;

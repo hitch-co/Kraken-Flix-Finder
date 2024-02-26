@@ -69,6 +69,39 @@ class MyFlaskApp:
             self.logger.info(f"Top 5 rows: {results[:5]}")
             self.logger.debug(f"JSONified results: {jsonified_results}")
             return jsonified_results
+
+        @self.app.route('/get_saved_list_items', methods=['POST'])
+        def get_saved_list_items():
+            try:
+                data = request.json
+                username = current_user.get_id()
+                list_name = data.get('list_name')
+                bq_movie_ids = self.bq_user_manager.get_saved_lists_movie_ids(
+                    username=username, 
+                    list_name=list_name
+                    )
+                self.logger.debug(f"bq_movie_ids: {bq_movie_ids}")
+
+                # Assuming movie_ids is a list of integers
+                str_movie_ids = ', '.join(['?'] * len(bq_movie_ids))  # Create a string of placeholders
+                self.logger.debug(f"str_movie_ids: {str_movie_ids}")
+
+                dbexplorer = DBExplorer(db_path=self.db_path)
+                query_path = './sql/get_user_saved_list_items.sql'
+                query_template = dbexplorer.load_sql_file_from_path(path=query_path)
+                query = query_template.format(str_movie_ids=str_movie_ids)  # Insert placeholders into query
+
+                results = dbexplorer.query_sql(query, bq_movie_ids)  # Pass list of IDs as parameter
+                jsonified_results = jsonify(results)
+
+                self.logger.info(f"Number of rows: {str(len(results))}")
+                self.logger.info(f"Top 5 rows: {results[:5]}")
+                self.logger.debug(f"JSONified results: {jsonified_results}")
+                return jsonified_results
+            except Exception as e:
+                self.logger.error(f"Error in get_saved_list_items(): {e}")
+                return jsonify({'error': 'An unexpected error occurred'}), 500
+
         @self.app.route('/get_saved_list_names', methods=['GET'])
         def get_saved_list_names():
             username = current_user.get_id()

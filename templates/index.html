@@ -64,7 +64,7 @@
         </select>
 
         <button id="saveListBtn">Save List As</button>
-        <button id="loadListBtn">Load List</button>
+        <button id="loadListBtn" onclick="executeGetSavedListItems()">Load List</button>
     </div>
     <ul id="processed-list" class="processed-list">
         <!-- Processed items will be appended here -->
@@ -104,6 +104,35 @@
         })
         .catch(error => console.error('Error fetching genres:', error));
     }
+
+    function executeGetSavedListItems() {
+        // Capture input values
+        var listName = document.getElementById('saved-lists-dropdown').value;
+        console.log('Selected list:', listName);
+
+        // Construct the data object to send
+        var listData = {
+            list_name: listName
+        };
+
+        // Make an AJAX request to the Flask backend
+        fetch('/get_saved_list_items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(listData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success with executeGetSavedListItems:', data);
+            displaySavedListItems(data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
     function fetchAndPopulateSavedLists() {
         fetch('/get_saved_list_names', {
             method: 'GET',
@@ -143,6 +172,48 @@
         .catch(error => {
             console.error('Error fetching saved lists:', error);
             // Consider updating the UI to reflect the error state
+        });
+    }
+
+    function displaySavedListItems(data) {
+        // Get the element where the saved list items will be displayed
+        console.log('displaySavedListItems() Saved list items:', data);
+        var savedListItems = document.getElementById('processed-list');
+        savedListItems.innerHTML = '';
+
+        // 
+
+        data.forEach(function(item, index) {
+            var li = document.createElement('li');
+
+            // Create a checkbox for each saved list item
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = 'saved-item-' + index;  // Unique ID for each checkbox
+            checkbox.value = index;  // Use index or any unique identifier from your result
+
+            // Optional: Store the entire result object as a data attribute
+            // This can be useful if you want to use other properties of the result later
+            checkbox.dataset.result = JSON.stringify(item);
+
+            // Event listener to track selected items
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    selectedItems.push(item);  // Add to the selected items list
+                } else {
+                    // Remove from the selected items list if unchecked
+                    selectedItems = selectedItems.filter(selectedItem => JSON.stringify(selectedItem) !== JSON.stringify(item));
+                }
+                console.log(selectedItems);
+            });
+
+            // Append the checkbox and result text to the list item
+            li.appendChild(checkbox);
+            var text = document.createTextNode(item['title_formatted']);
+            li.appendChild(text);
+
+            // Append the list item to the results list
+            savedListItems.appendChild(li);
         });
     }
 

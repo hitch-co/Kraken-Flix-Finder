@@ -1,6 +1,7 @@
 from google.cloud import bigquery
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud.exceptions import NotFound, GoogleCloudError
+from datetime import datetime
 
 from classes.ConfigManager import ConfigManager
 from classes.LoggingManager import LoggingManager
@@ -163,7 +164,27 @@ class BQUserManager:
         else:
             return None
 
+    def get_saved_lists_movie_ids(self, username, list_name):
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_users_saved_lists
+        )
 
+        query = f"""
+        SELECT DISTINCT movie_id
+        FROM {fully_qualified_table_id}
+        WHERE username = '{username}' AND list_name = '{list_name}'
+        """
+
+        # Execute the query
+        query_job = self.bq_client.query(query)
+
+        # Process the results
+        results = [row.movie_id for row in query_job]
+        
+        self.logger.debug(f"Movie IDs for {username}'s list '{list_name}': {results}")
+        return results
     
     def get_saved_list_names(self, username):
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
@@ -488,6 +509,6 @@ if __name__ == '__main__':
     #################################################################
     # # TEST 4: Add list to saved lists
     username = "ehitch"
-    list_name = "test_favourites"
+    list_name = "test_favourites2"
     movie_ids = [1587, 60]
     bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)

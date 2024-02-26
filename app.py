@@ -74,7 +74,7 @@ class MyFlaskApp:
         def get_saved_list_items():
             try:
                 data = request.json
-                username = current_user.get_id()
+                username = request.args.get('test_user_name', default=current_user.get_id() if current_user else None)
                 list_name = data.get('list_name')
                 bq_movie_ids = self.bq_user_manager.get_saved_lists_movie_ids(
                     username=username, 
@@ -98,13 +98,14 @@ class MyFlaskApp:
                 self.logger.info(f"Top 5 rows: {results[:5]}")
                 self.logger.debug(f"JSONified results: {jsonified_results}")
                 return jsonified_results
+            
             except Exception as e:
                 self.logger.error(f"Error in get_saved_list_items(): {e}")
                 return jsonify({'error': 'An unexpected error occurred'}), 500
 
         @self.app.route('/get_saved_list_names', methods=['GET'])
         def get_saved_list_names():
-            username = current_user.get_id()
+            username = request.args.get('test_user_name', default=current_user.get_id() if current_user else None)
             results = self.bq_user_manager.get_saved_list_names(username=username)
             jsonified_results = jsonify(results)
 
@@ -138,7 +139,7 @@ class MyFlaskApp:
 
             self.logger.debug(f"JSONified results: {jsonified_results}")
             return jsonified_results
-    
+
         @self.app.route('/login/users', methods=['POST'])
         def login():
             try:
@@ -150,7 +151,7 @@ class MyFlaskApp:
                 result, record = self.bq_user_manager.check_user_login(username, password)
                 self.logger.info(f"check_user_login result: {result}")
                 self.logger.info(f"check_user_login record: {record}")
-                
+
                 # Define the field names here, inside the login function, before using them
                 field_names = ['username', 'email', 'date_created', 'is_active', 'is_admin']
 

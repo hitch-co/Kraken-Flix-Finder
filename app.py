@@ -74,7 +74,7 @@ class MyFlaskApp:
         def get_saved_list_items():
             try:
                 data = request.json
-                username = request.args.get('test_user_name', default=current_user.get_id() if current_user else None)
+                username = current_user.get_id() if current_user else None
                 list_name = data.get('list_name')
                 bq_movie_ids = self.bq_user_manager.get_saved_lists_movie_ids(
                     username=username, 
@@ -105,7 +105,7 @@ class MyFlaskApp:
 
         @self.app.route('/get_saved_list_names', methods=['GET'])
         def get_saved_list_names():
-            username = request.args.get('test_user_name', default=current_user.get_id() if current_user else None)
+            username = current_user.get_id() if current_user else None            
             results = self.bq_user_manager.get_saved_list_names(username=username)
             jsonified_results = jsonify(results)
 

@@ -69,6 +69,16 @@ class MyFlaskApp:
             self.logger.info(f"Top 5 rows: {results[:5]}")
             self.logger.debug(f"JSONified results: {jsonified_results}")
             return jsonified_results
+        @self.app.route('/get_saved_list_names', methods=['GET'])
+        def get_saved_list_names():
+            username = current_user.get_id()
+            results = self.bq_user_manager.get_saved_list_names(username=username)
+            jsonified_results = jsonify(results)
+
+            self.logger.info(f"Number of rows: {str(len(results))}")
+            self.logger.info(f"Top 5 rows: {results[:5]}")
+            self.logger.debug(f"JSONified results: {jsonified_results}")
+            return jsonified_results
                         
         @self.app.route('/search', methods=['POST'])
         def search():

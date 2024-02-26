@@ -164,7 +164,52 @@ class BQUserManager:
             return None
 
 
-    def ____send_recordsjob_to_bq(self, full_table_id, records:list[dict]) -> None:
+    
+    def get_saved_list_names(self, username):
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_users_saved_lists
+        )
+
+        query = f"""
+        SELECT DISTINCT list_name
+        FROM `{fully_qualified_table_id}`
+        WHERE username = @session_username
+        """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("session_username", "STRING", username),
+            ]
+        )
+
+        query_job = self.bq_client.query(query, job_config=job_config)
+        
+        # Convert each row to a dict
+        results = [dict(row) for row in query_job]
+        return results
+
+    def add_list_to_saved_lists(self, username, list_name, movie_ids:list[str]) -> None:
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_users_saved_lists
+        )
+
+        records = []
+        for movie_id in movie_ids:
+            record = {
+                "username": username,
+                "list_name": list_name,
+                "movie_id": movie_id,
+                "date_created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            records.append(record)
+
+        self._send_recordsjob_to_bq(fully_qualified_table_id, records)
+
+    def _send_recordsjob_to_bq(self, full_table_id, records:list[dict]) -> None:
         self.logger.info("Starting BigQuery _send_recordsjob_to_bq() job...")
         table = self.bq_client.get_table(full_table_id)
         errors = self.bq_client.insert_rows_json(table, records)     
@@ -395,22 +440,27 @@ class BQUserManager:
         return rows_to_insert   
 
 if __name__ == '__main__':
-    config = ConfigManager.initialize(r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml')
+    ConfigManager.initialize(r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml')
+    config = ConfigManager.get_instance()
     bq_user_manager = BQUserManager()
 
-    # TEST 1: Generate user
-    # Generate user records for the user_login table based ont his schema:
-    new_user_record ={
-        "username": "visitor",
-        "email": "unknown",
-        "password": "visitor",
-        "date_created": "2024-02-24 00:00:00",
-        "is_active": True,
-        "is_admin": False
-        }
-    # Execute the new user creation
-    bq_user_manager.execute_new_user_creation(new_user_record)
 
+    #################################################################
+    # # TEST 1: Generate user
+    # # Generate user records for the user_login table based ont his schema:
+    # new_user_record ={
+    #     "username": "visitor",
+    #     "email": "unknown",
+    #     "password": "visitor",
+    #     "date_created": "2024-02-24 00:00:00",
+    #     "is_active": True,
+    #     "is_admin": False
+    #     }
+    # # Execute the new user creation
+    # bq_user_manager.execute_new_user_creation(new_user_record)
+
+
+    #################################################################
     # # TEST 2: Check user login
     # # Check user login
     # username = "ehitch"
@@ -420,3 +470,24 @@ if __name__ == '__main__':
     # print(f"Type of result: {type(result)}")
     # print(f"Records: {records}")
 
+
+    # #################################################################
+    # # # TEST 3: Create Saved List Table
+    # # # Create or replace a BQ table
+    # fully_qualified_table_id = bq_user_manager._generate_fully_qualified_table_id(
+    #     project_id=config.bq_project_id,
+    #     dataset_id=config.bq_dataset_id,
+    #     table_id=config.bq_table_id_users_saved_lists
+    # )
+    # bq_user_manager._create_table_if_not_exists(
+    #     fully_qualified_table_id=fully_qualified_table_id,
+    #     schema_name='users_saved_lists_schema'
+    # )
+
+
+    #################################################################
+    # # TEST 4: Add list to saved lists
+    username = "ehitch"
+    list_name = "test_favourites"
+    movie_ids = [1587, 60]
+    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)

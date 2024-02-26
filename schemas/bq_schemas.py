@@ -10,9 +10,17 @@ def get_bq_schemas():
         bigquery.SchemaField("is_admin", "BOOLEAN"),
     ]
 
+    users_saved_lists_schema = [
+        bigquery.SchemaField("username", "STRING"),
+        bigquery.SchemaField("list_name", "STRING"),
+        bigquery.SchemaField("movie_id", "INTEGER"),
+        bigquery.SchemaField("date_created", "DATETIME"),
+    ]
+
     #Schema dictionary for each known budget file
     bq_schemas = {
         'user_login_schema': user_login_schema,
+        'users_saved_lists_schema': users_saved_lists_schema
     }
 
     #return schemas in dictionary

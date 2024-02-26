@@ -124,10 +124,14 @@ class ConfigManager:
             self.config_dirpath = yaml_config['config_dirpath']
             self.keys_dirpath = yaml_config['keys_dirpath']
 
+            # Flask config items
+            self.flask_login_secret_key = yaml_config['flask_config']['login_secret_key']
+            
             # BQ config items
             self.bq_project_id = yaml_config['bq_config']['project_id']
             self.bq_dataset_id = yaml_config['bq_config']['dataset_id']
             self.bq_table_id_user_login = yaml_config['bq_config']['table_ids']['user_login']
+            self.bq_table_id_users_saved_lists = yaml_config['bq_config']['table_ids']['users_saved_lists']
 
         except Exception as e:
             self.logger.error(f"Error in update_config_from_yaml(): {e}")
@@ -157,3 +161,4 @@ if __name__ == "__main__":
     print(config.bq_dataset_id)
     print(config.bq_project_id)
     print(config.bq_table_id_user_login)
+    print(config.bq_table_id_users_saved_lists)

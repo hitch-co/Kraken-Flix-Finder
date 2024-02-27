@@ -512,14 +512,14 @@ if __name__ == '__main__':
     bq_user_manager = BQUserManager()
 
 
-    #################################################################
+    # ################################################################
     # # TEST 1: Generate user
     # # Generate user records for the user_login table based ont his schema:
     # new_user_record ={
-    #     "username": "visitor",
+    #     "username": "cred",
     #     "email": "unknown",
-    #     "password": "visitor",
-    #     "date_created": "2024-02-24 00:00:00",
+    #     "password": "wer",
+    #     "date_created": "2024-02-27 00:00:00",
     #     "is_active": True,
     #     "is_admin": False
     #     }
@@ -527,11 +527,11 @@ if __name__ == '__main__':
     # bq_user_manager.execute_new_user_creation(new_user_record)
 
 
-    #################################################################
+    # ################################################################
     # # TEST 2: Check user login
     # # Check user login
-    # username = "ehitch"
-    # password = "123"
+    # username = "cred"
+    # password = "wer"
     # result, records = bq_user_manager.check_user_login(username, password)
     # print(f"User {username} login result: {result}")
     # print(f"Type of result: {type(result)}")
@@ -552,22 +552,22 @@ if __name__ == '__main__':
     # )
 
 
-    #################################################################
-    # # TEST 4: Add list to saved lists
-    username = "ehitch"
+    # #################################################################
+    # # # TEST 4: Add list to saved lists
+    # username = "ehitch"
     
-    list_name = "test_favourites2"
-    movie_ids = [1587, 60]
-    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    # list_name = "test_favourites2"
+    # movie_ids = [1587, 60]
+    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
     
-    list_name = "test_favourites3"
-    movie_ids = [66, 1398]
-    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    # list_name = "test_favourites3"
+    # movie_ids = [66, 1398]
+    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
     
-    list_name = "test_favourites4"
-    movie_ids = [82, 84]
-    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    # list_name = "test_favourites4"
+    # movie_ids = [82, 84]
+    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
     
-    list_name = "test_favourites5"
-    movie_ids = [1614, 91]
-    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    # list_name = "test_favourites5"
+    # movie_ids = [1614, 91]
+    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)

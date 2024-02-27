@@ -36,6 +36,8 @@
     <div class="form-row year-row">
         <label for="year_min">Min Year:</label>
         <input type="number" id="year_min" name="year_min">
+    </div>
+    <div class="form-row year-row">
         <label for="year_max">Max Year:</label>
         <input type="number" id="year_max" name="year_max">
     </div>
@@ -47,37 +49,95 @@
     <button onclick="selectAll()">Select All</button>
     <button onclick="selectNone()">Deselect All</button>
     <button onclick="addToProcessedList()">Add to List</button>
-    <ul id="results-list" class="results-list">
-        <!-- Search results will be appended here -->
-    </ul>
+    <div class="results-list-container">
+        <ul id="results-list" class="results-list">
+            <!-- Search results will be appended here -->
+        </ul>
+    </div>
 </div>
 
 <!-- Processed List Box -->
 <div class="processed-list-box">
     <div class="processed-header">
-        <span class="processed-title">Processed Items</span>
         
-        <!-- Dropdown Menu for Saved Lists -->
-        <select id="saved-lists-dropdown" name="saved-lists-dropdown">
-            <option value="">Select a saved list</option>
-            <!-- Additional options will be added here dynamically -->
-        </select>
+        <!-- Group for the title and saved lists dropdown -->
+        <div class="processed-header-group">
+            <span class="processed-title">Processed Items</span>
+            <div class="saved-lists-selector">
+                <label for="saved-lists-dropdown">Saved Lists:</label>
+                <select id="saved-lists-dropdown" name="saved-lists-dropdown">
+                    <option value="">Select a saved list</option>
+                    <!-- Additional options will be added here dynamically -->
+                </select>
+            </div>
+        </div>
 
-        <button id="saveListBtn" onclick="saveUpdatedList()">Save List</button>
-        <button id="loadListBtn" onclick="fetchAndDisplayListItems()">Load List</button>
-        <button id="saveAsListBtn" onclick="saveNewList()">Save List As</button>
+        <!-- Group for the buttons -->
+        <div class="processed-header-buttons">
+            <!-- <button id="saveListBtn" onclick="removeSelectedFromList()">Save List</button> -->
+            <button id="saveListBtn" onclick="saveUpdatedList()">Save List</button>
+            <button id="loadListBtn" onclick="fetchAndDisplayListItems()">Load List</button>
+            <button id="saveAsListBtn" onclick="saveListAs()">Save List As</button>
+            <button id="clearListBtn" onclick="clearList()">Clear List</button>
+        </div>
+
     </div>
-    <ul id="processed-list" class="processed-list">
-        <!-- Processed items will be appended here -->
-    </ul>
+    <div class="processed-list-container">
+        <ul id="processed-list" class="processed-list">
+            <!-- Processed items will be appended here -->
+        </ul>
+    </div>
 </div>
 
 <script>
-    var selectedItems = []
+    var selectedProcessedItems = []
     window.processedItemsData = [];
     var selectedSearchItems = []
 
-    function saveNewList() {
+    function _saveList(list_name) {
+        // Capture input values
+        var listName = list_name;
+        movie_ids_mapped = window.processedItemsData.map(item => item.idMovie);
+
+        console.log('Selected list for saving:', listName);
+        console.log('Selected items for saving:', movie_ids_mapped);
+
+        // Construct the data object to send
+        var listData = {
+            list_name: listName,
+            movie_ids: movie_ids_mapped
+        };
+
+        fetch('/save_list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(listData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Throw an error with a message that includes the status code, if needed
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // We only parse the JSON if the response was ok.
+        })
+        .then(data => {
+            console.log('Success with saveUpdatedList:', data);
+            // Only alert success here, as this block is reached only if there were no errors
+            alert('List saved successfully');
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            // Handle all errors in the .catch block, including network errors and thrown errors
+            alert('Error saving list. Please try again.');
+        });
+
+        // Refresh the dropdown with saved lists
+        _populateUserListsDropdown();
+    }
+
+    function saveListAs() {
         var listName = ""; // Initialize listName outside the loop
         var isValidName = false; // Flag to check if the name is valid
 
@@ -108,73 +168,22 @@
 
         // Once a valid name is entered, proceed with the rest of the function
         if (isValidName) {
-            // Capture input values
-            var movie_ids_mapped = window.processedItemsData.map(item => item.idMovie);
-
-            console.log('New list name:', listName);
-            console.log('Selected items for saving:', movie_ids_mapped);
-
-            // Construct the data object to send
-            var listData = {
-                list_name: listName,
-                movie_ids: movie_ids_mapped
-            };
-
-            // Make an AJAX request to the Flask backend
-            fetch('/save_list', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(listData),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success with saveNewList:', data);
-                alert('List saved successfully');
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-
-            // Refresh the dropdown list
-            _populateUserListsDropdown();
+            _saveList(listName);
+        } else {
+            // Handle the case where the user cancels the prompt
+            alert('List not saved');
         }
     }
 
     function saveUpdatedList() {
         // Capture input values
         var listName = document.getElementById('saved-lists-dropdown').value;
-        movie_ids_mapped = window.processedItemsData.map(item => item.idMovie);
-
-        console.log('Selected list for saving:', listName);
-        console.log('Selected items for saving:', movie_ids_mapped);
-
-        // Construct the data object to send
-        var listData = {
-            list_name: listName,
-            movie_ids: movie_ids_mapped
-        };
-
-        // Make an AJAX request to the Flask backend
-        fetch('/save_list', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(listData),
-        })
-        .then(response => response.json(
-            console.log('response:', response)
-        ))
-        .then(data => {
-            console.log('Success with saveUpdatedList:', data);
-        })
-        .catch((error) => {
+        try {
+            _saveList(listName)
+        } catch (error) {
             console.error('Error:', error);
-        });
-
-        alert('List saved successfully');
+            alert('Please select a list to save');
+        }
     }
 
     function fetchAndDisplayListItems() {
@@ -243,13 +252,13 @@
             // Reintroduce the event listener for each checkbox
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
-                    // Add to the selectedItems array if checked
-                    selectedItems.push(item);
+                    // Add to the selectedProcessedItems array if checked
+                    selectedProcessedItems.push(item);
                 } else {
-                    // Remove from the selectedItems array if unchecked
-                    selectedItems = selectedItems.filter(selectedItem => selectedItem.idMovie !== item.idMovie);
+                    // Remove from the selectedProcessedItems array if unchecked
+                    selectedProcessedItems = selectedProcessedItems.filter(selectedItem => selectedItem.idMovie !== item.idMovie);
                 }
-                console.log(selectedItems);
+                console.log(selectedProcessedItems);
             });
 
             var text = document.createTextNode(`${item.title_formatted} (ID: ${item.idMovie})`);
@@ -541,9 +550,9 @@
             checkbox.checked = true;
             // Assuming result data is stored in checkbox.dataset.result
             const result = JSON.parse(checkbox.dataset.result);
-            // Check if the item is not already in selectedItems before adding
-            if (!selectedItems.some(item => JSON.stringify(item) === JSON.stringify(result))) {
-                selectedItems.push(result);
+            // Check if the item is not already in selectedSearchItems before adding
+            if (!selectedSearchItems.some(item => JSON.stringify(item) === JSON.stringify(result))) {
+                selectedSearchItems.push(result);
             }
         });
     }
@@ -555,9 +564,17 @@
             checkbox.checked = false;
             // Assuming result data is stored in checkbox.dataset.result
             const result = JSON.parse(checkbox.dataset.result);
-            // Remove from the selected items list if unchecked
-            selectedItems = selectedItems.filter(item => JSON.stringify(item) !== JSON.stringify(result));
+            // Remove from the selectedSearchItems list if unchecked
+            selectedSearchItems = selectedSearchItems.filter(item => JSON.stringify(item) !== JSON.stringify(result));
         });
+    }
+
+    function clearList() {
+        // Clear the processed list and the selectedProcessedItems array
+        var processedListElement = document.getElementById('processed-list');
+        processedListElement.innerHTML = '';
+        selectedProcessedItems = [];
+        window.processedItemsData = [];
     }
 
     function on_load_do_things() {

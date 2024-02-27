@@ -108,7 +108,7 @@ body {
     gap: 5px;
 }
 
-#saveListBtn, #loadListBtn, #saveAsListBtn, #clearListBtn {
+#saveListBtn, #loadListBtn, #saveAsListBtn, #clearListBtn, #removeFromListBtn {
     padding: 5px 10px; /* Adjust padding as needed */
     margin-left: 5px; /* Add some space between buttons */
 }

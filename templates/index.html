@@ -74,7 +74,7 @@
 
         <!-- Group for the buttons -->
         <div class="processed-header-buttons">
-            <!-- <button id="saveListBtn" onclick="removeSelectedFromList()">Save List</button> -->
+            <button id="removeFromListBtn" onclick="removeSelectedFromProcessedList()">Remove Selected from List</button>
             <button id="saveListBtn" onclick="saveUpdatedList()">Save List</button>
             <button id="loadListBtn" onclick="fetchAndDisplayListItems()">Load List</button>
             <button id="saveAsListBtn" onclick="saveListAs()">Save List As</button>
@@ -448,6 +448,41 @@
             resultsList.appendChild(li);
         });
     }
+
+    function removeSelectedFromProcessedList() {
+    // Find all checkboxes in the processed list
+    var checkboxes = document.querySelectorAll('#processed-list input[type="checkbox"]');
+
+    // Filter out the checked ones and map to their corresponding idMovie
+    var checkedIds = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => window.processedItemsData[checkbox.value].idMovie);
+
+    // Now, use these ids to filter out the selected items from window.processedItemsData
+    window.processedItemsData = window.processedItemsData.filter(item => !checkedIds.includes(item.idMovie));
+
+    // Update the DOM after removal
+    var processedListElement = document.getElementById('processed-list');
+    processedListElement.innerHTML = ''; // Clear existing processed items before redisplay
+
+    window.processedItemsData.forEach(function(item, index) {
+        var li = document.createElement('li');
+
+        // Create a checkbox for each list item
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'saved-item-' + index;
+        checkbox.value = index; // Assign the index in processedItemsData as the value
+        li.appendChild(checkbox);
+
+        // Append the checkbox and result text to the list item
+        var text = document.createTextNode(`${item.title_formatted} (ID: ${item.idMovie})`);
+        li.appendChild(text);
+
+        // Append the list item to the results list
+        processedListElement.appendChild(li);
+    });
+}
 
     function addToProcessedList() {
         var username = sessionStorage.getItem('username', 'not authenticated'); //TODO Does this need to be here?

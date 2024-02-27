@@ -27,11 +27,23 @@ body {
     margin-bottom: 10px;
 }
 
-.form-row label, .login-row label, .year-row label {
+.form-row label, .year-row label {
+    width: 100px; /* Fixed width for labels */
+    min-width: 100px; /* Ensure labels do not shrink below 100px */
+    margin-right: 10px; /* Space between label and input */
+}
+
+.form-row input, .form-row select, .year-row input {
+    width: 150px; /* Fixed width for inputs */
+    /* If you want inputs to be flexible but not exceed a certain width, you can use max-width instead */
+    /* max-width: 100px; */
+}
+
+.login-row label {
     margin-right: 10px; /* Add some spacing between label and input */
 }
 
-.login-row input, .login-row button, .year-row input {
+.login-row input, .login-row button {
     flex: 1; /* Inputs and button will take up equal space */
     margin-right: 10px; /* Add some spacing between elements */
 }
@@ -73,14 +85,27 @@ body {
 }
 
 .processed-header {
-    display: flex; /* Use flexbox for layout */
-    align-items: center; /* Align items vertically */
-    justify-content: space-between; /* Space out title and buttons */
-    margin-bottom: 10px; /* Add some space between header and list */
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    align-items: start; /* Align items to the start of the container */
+    gap: 10px; /* Space between groups */
+}
+
+.processed-header-group, .processed-header-buttons {
+    display: flex;
+    flex-direction: row; /* Layout items in a row */
+    align-items: center; /* Vertically align items */
+    gap: 10px; /* Space between items */
 }
 
 .processed-title {
     font-size: 1.5em; /* Adjust title size as needed */
+}
+
+.saved-lists-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 #saveListBtn, #loadListBtn, #saveAsListBtn, #clearListBtn {

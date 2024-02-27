@@ -92,13 +92,13 @@ class MyFlaskApp:
                 self.logger.error(f"Error in save_list(): {e}")
                 return jsonify({'error': 'An unexpected error occurred'}), 500
 
-        @self.app.route('/get_saved_list_items', methods=['POST'])
+        @self.app.route('/fetch_saved_list_items', methods=['POST'])
         def get_saved_list_items():
             try:
                 data = request.json
                 username = current_user.get_id() if current_user else None
                 list_name = data.get('list_name')
-                bq_movie_ids = self.bq_user_manager.get_saved_lists_movie_ids(
+                bq_movie_ids = self.bq_user_manager.get_saved_list_movie_ids(
                     username=username, 
                     list_name=list_name
                     )

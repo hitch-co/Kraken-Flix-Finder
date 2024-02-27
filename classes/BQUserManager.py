@@ -23,32 +23,7 @@ class BQUserManager:
         self.bq_client = bigquery.Client()
         self.logger.info("BQUploader initialized.")
 
-    def _delete_existing_list(self, username, list_name):
-        fully_qualified_table_id = self._generate_fully_qualified_table_id(
-            self.config.bq_project_id,
-            self.config.bq_dataset_id,
-            self.config.bq_table_id_users_saved_lists
-        )
-        self.logger.debug(f"starting to delete list '{list_name}' for user '{username}'")
-        self.logger.debug(f"fully_qualified_table_id: {fully_qualified_table_id}")
-
-        delete_query = f"""
-        DELETE FROM `{fully_qualified_table_id}`
-        WHERE username = @username AND list_name = @list_name
-        """
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("username", "STRING", username),
-                bigquery.ScalarQueryParameter("list_name", "STRING", list_name)
-            ]
-        )
-        delete_query_job = self.bq_client.query(delete_query, job_config=job_config)
-        delete_query_job.result()
-        self.logger.debug(f"Deleted list '{list_name}' for user '{username}' deleted.")
-
-        time.sleep(30)
-
-    def _insert_new_list(self, username, list_name, movie_ids):
+    def save_list_of_movie_ids(self, username, list_name, movie_ids: list[int]):
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
             self.config.bq_project_id,
             self.config.bq_dataset_id,
@@ -59,32 +34,27 @@ class BQUserManager:
         self.logger.debug(f"Movie IDs: {movie_ids}")
 
         rows_to_insert = [
-            {"username": username, "list_name": list_name, "movie_id": movie_id}
+            {"username": username, "list_name": list_name, "movie_id": movie_id, "is_active": True}
             for movie_id in movie_ids
         ]
 
         self.logger.debug(f"rows_to_insert: {rows_to_insert}")
-        
+
         errors = self.bq_client.insert_rows_json(fully_qualified_table_id, rows_to_insert)
         if errors == []:
             self.logger.debug(f"New movie IDs for {username}'s list '{list_name}' have been saved successfully.")
             self.logger.debug(f"Movie IDs: {movie_ids}")
+            return movie_ids
         else:
             self.logger.error(f"Errors while inserting new movie IDs for {username}'s list '{list_name}': {errors}")
-
-    def save_list_of_movie_ids(self, username, list_name, movie_ids: list[int]) -> list[int]:
-        self.logger.debug(f"Starting _delete_existing_list()")
-        self._delete_existing_list(username, list_name)
+            return None
         
-        self.logger.debug(f"Starting _insert_new_list()")
-        self._insert_new_list(username, list_name, movie_ids)
-        return movie_ids
-
-    def _replace_bq_table(self, fully_qualified_table_id, schema):
+    def _replace_bq_table(self, fully_qualified_table_id, schema_name):
         """
         Replaces a BigQuery table with the given schema. Deletes the existing table if it exists, then creates a new one.
         """
         try:
+            schema = self.config.bq_schemas[schema_name]
             table_ref = bigquery.TableReference.from_string(fully_qualified_table_id)
             self.logger.info(f"Attempting to replace BQ table: {fully_qualified_table_id}")
 
@@ -153,6 +123,20 @@ class BQUserManager:
             job_stats = query_job.query_plan
             self.logger.debug(f"Query plan: {job_stats}")
 
+    def _send_recordsjob_to_bq(self, full_table_id, records:list[dict]) -> None:
+        self.logger.info("Starting BigQuery _send_recordsjob_to_bq() job...")
+        table = self.bq_client.get_table(full_table_id)
+        errors = self.bq_client.insert_rows_json(table, records)     
+        if errors:
+            self.logger.error(f"Encountered errors while inserting rows: {errors}")
+            self.logger.error("These are the records:")
+            self.logger.error(records)
+        else:
+            self.logger.info(f"{len(records)} successfully inserted into table_id: {full_table_id}")
+            self.logger.debug("These are the records:")
+            self.logger.debug(records)
+
+    # Not in use yet
     def execute_new_user_creation(self, new_user_record):
         # Generate fully qualified table ID
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
@@ -222,27 +206,44 @@ class BQUserManager:
         else:
             return None
 
-    def get_saved_lists_movie_ids(self, username, list_name):
+    def get_saved_list_movie_ids(self, username, list_name, is_active='TRUE'):
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
             self.config.bq_project_id,
             self.config.bq_dataset_id,
             self.config.bq_table_id_users_saved_lists
         )
 
+        # Convert is_active to boolean
+        is_active_bool = True if is_active.upper() == 'TRUE' else False
+
+        # Prepare the parameterized query
         query = f"""
         SELECT DISTINCT movie_id
-        FROM {fully_qualified_table_id}
-        WHERE username = '{username}' AND list_name = '{list_name}'
+        FROM `{fully_qualified_table_id}`
+        WHERE username = @username AND list_name = @list_name AND is_active = @is_active
         """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("username", "STRING", username),
+                bigquery.ScalarQueryParameter("list_name", "STRING", list_name),
+                bigquery.ScalarQueryParameter("is_active", "BOOL", is_active_bool),
+            ]
+        )
 
-        # Execute the query
-        query_job = self.bq_client.query(query)
+        try:
+            # Execute the query
+            query_job = self.bq_client.query(query, job_config=job_config)
 
-        # Process the results
-        results = [row.movie_id for row in query_job]
-        
-        self.logger.debug(f"Movie IDs for {username}'s list '{list_name}': {results}")
-        return results
+            # Wait for the query to finish
+            results = query_job.result()
+
+            # Process the results
+            movie_ids = [row.movie_id for row in results]
+
+            self.logger.debug(f"Movie IDs for {username}'s list '{list_name}' with is_active={is_active}: {movie_ids}")
+            return movie_ids
+        except Exception as e:
+            self.logger.error(f"Failed to execute query: {e}")
     
     def get_saved_list_names(self, username):
         fully_qualified_table_id = self._generate_fully_qualified_table_id(
@@ -282,25 +283,12 @@ class BQUserManager:
                 "username": username,
                 "list_name": list_name,
                 "movie_id": movie_id,
-                "date_created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "is_active": True
             }
             records.append(record)
 
         self._send_recordsjob_to_bq(fully_qualified_table_id, records)
-
-    def _send_recordsjob_to_bq(self, full_table_id, records:list[dict]) -> None:
-        self.logger.info("Starting BigQuery _send_recordsjob_to_bq() job...")
-        table = self.bq_client.get_table(full_table_id)
-        errors = self.bq_client.insert_rows_json(table, records)     
-        if errors:
-            self.logger.error(f"Encountered errors while inserting rows: {errors}")
-            self.logger.error("These are the records:")
-            self.logger.error(records)
-        else:
-            self.logger.info(f"{len(records)} successfully inserted into table_id: {full_table_id}")
-            self.logger.debug("These are the records:")
-            self.logger.debug(records)
-     
+   
     def ____create_or_replace_bq_table_from_gcs(
             self,
             project_name, 
@@ -558,7 +546,7 @@ if __name__ == '__main__':
     #     dataset_id=config.bq_dataset_id,
     #     table_id=config.bq_table_id_users_saved_lists
     # )
-    # bq_user_manager._create_table_if_not_exists(
+    # bq_user_manager._replace_bq_table(
     #     fully_qualified_table_id=fully_qualified_table_id,
     #     schema_name='users_saved_lists_schema'
     # )
@@ -568,9 +556,9 @@ if __name__ == '__main__':
     # # TEST 4: Add list to saved lists
     username = "ehitch"
     
-    # list_name = "test_favourites2"
-    # movie_ids = [1587, 60]
-    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    list_name = "test_favourites2"
+    movie_ids = [1587, 60]
+    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
     
     list_name = "test_favourites3"
     movie_ids = [66, 1398]

@@ -2,11 +2,12 @@ from google.cloud import bigquery
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud.exceptions import NotFound, GoogleCloudError
 from datetime import datetime
+import time
 
 from classes.ConfigManager import ConfigManager
 from classes.LoggingManager import LoggingManager
 
-runtime_debug_level = 'INFO'
+runtime_debug_level = 'DEBUG'
 
 class BQUserManager:
     def __init__(self):
@@ -21,7 +22,64 @@ class BQUserManager:
 
         self.bq_client = bigquery.Client()
         self.logger.info("BQUploader initialized.")
-    
+
+    def _delete_existing_list(self, username, list_name):
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_users_saved_lists
+        )
+        self.logger.debug(f"starting to delete list '{list_name}' for user '{username}'")
+        self.logger.debug(f"fully_qualified_table_id: {fully_qualified_table_id}")
+
+        delete_query = f"""
+        DELETE FROM `{fully_qualified_table_id}`
+        WHERE username = @username AND list_name = @list_name
+        """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("username", "STRING", username),
+                bigquery.ScalarQueryParameter("list_name", "STRING", list_name)
+            ]
+        )
+        delete_query_job = self.bq_client.query(delete_query, job_config=job_config)
+        delete_query_job.result()
+        self.logger.debug(f"Deleted list '{list_name}' for user '{username}' deleted.")
+
+        time.sleep(30)
+
+    def _insert_new_list(self, username, list_name, movie_ids):
+        fully_qualified_table_id = self._generate_fully_qualified_table_id(
+            self.config.bq_project_id,
+            self.config.bq_dataset_id,
+            self.config.bq_table_id_users_saved_lists
+        )
+        self.logger.debug(f"saving list '{list_name}' for user '{username}'")
+        self.logger.debug(f"Inserting new movie IDs to table: {fully_qualified_table_id}")
+        self.logger.debug(f"Movie IDs: {movie_ids}")
+
+        rows_to_insert = [
+            {"username": username, "list_name": list_name, "movie_id": movie_id}
+            for movie_id in movie_ids
+        ]
+
+        self.logger.debug(f"rows_to_insert: {rows_to_insert}")
+        
+        errors = self.bq_client.insert_rows_json(fully_qualified_table_id, rows_to_insert)
+        if errors == []:
+            self.logger.debug(f"New movie IDs for {username}'s list '{list_name}' have been saved successfully.")
+            self.logger.debug(f"Movie IDs: {movie_ids}")
+        else:
+            self.logger.error(f"Errors while inserting new movie IDs for {username}'s list '{list_name}': {errors}")
+
+    def save_list_of_movie_ids(self, username, list_name, movie_ids: list[int]) -> list[int]:
+        self.logger.debug(f"Starting _delete_existing_list()")
+        self._delete_existing_list(username, list_name)
+        
+        self.logger.debug(f"Starting _insert_new_list()")
+        self._insert_new_list(username, list_name, movie_ids)
+        return movie_ids
+
     def _replace_bq_table(self, fully_qualified_table_id, schema):
         """
         Replaces a BigQuery table with the given schema. Deletes the existing table if it exists, then creates a new one.
@@ -509,6 +567,19 @@ if __name__ == '__main__':
     #################################################################
     # # TEST 4: Add list to saved lists
     username = "ehitch"
-    list_name = "test_favourites2"
-    movie_ids = [1587, 60]
+    
+    # list_name = "test_favourites2"
+    # movie_ids = [1587, 60]
+    # bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    
+    list_name = "test_favourites3"
+    movie_ids = [66, 1398]
+    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    
+    list_name = "test_favourites4"
+    movie_ids = [82, 84]
+    bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)
+    
+    list_name = "test_favourites5"
+    movie_ids = [1614, 91]
     bq_user_manager.add_list_to_saved_lists(username, list_name, movie_ids)

@@ -63,7 +63,7 @@
             <!-- Additional options will be added here dynamically -->
         </select>
 
-        <button id="saveListBtn">Save List</button>
+        <button id="saveListBtn" onclick="executeSaveList()">Save List</button>
         <button id="loadListBtn" onclick="executeGetSavedListItems()">Load List</button>
         <button id="saveAsListBtn">Save As New List</button>
     </div>
@@ -76,6 +76,40 @@
     var selectedItems = []
     window.processedItemsData = [];
     var selectedSearchItems = []
+
+    function executeSaveList() {
+        // Capture input values
+        var listName = document.getElementById('saved-lists-dropdown').value;
+        movie_ids_mapped = window.processedItemsData.map(item => item.idMovie);
+
+        console.log('Selected list for saving:', listName);
+        console.log('Selected items for saving:', movie_ids_mapped);
+
+        // Construct the data object to send
+        var listData = {
+            list_name: listName,
+            movie_ids: movie_ids_mapped
+        };
+
+        // Make an AJAX request to the Flask backend
+        fetch('/save_list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(listData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success with executeSaveList:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+
+        alert('List saved successfully');
+    }
+
 
     function executeGetSavedListItems() {
         // Capture input values
@@ -333,7 +367,6 @@
             // Append the checkbox and result text to the list item
             li.appendChild(checkbox);
             var text = document.createTextNode(`${result.title_formatted} (ID: ${result.idMovie})`)
-            // var text = document.createTextNode(`${result['title_formatted']} (ID: ${result[idMovie]})`)
             li.appendChild(text);
 
             // Append the list item to the results list
@@ -361,12 +394,12 @@
             if (!isItemProcessed) {
                 // Prepare item data
                 let listItem = {
-                    username: username,
                     idMovie: item.idMovie,
+                    idPath: item.idPath,
+                    release_date: item.release_date,
+                    release_year: item.release_year,
+                    strPath: item.strPath,
                     title_formatted: item.title_formatted,
-                    idFile: item.idFile,
-                    genre_id: item.genre_id,
-                    release_year: item.release_year
                 };
 
                 // Add new unique item to window.processedItemsData
@@ -403,7 +436,6 @@
 
             // Append the list item to the results list
             processedListElement.appendChild(li);
-
         });
     }
 

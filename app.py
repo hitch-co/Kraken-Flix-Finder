@@ -70,13 +70,35 @@ class MyFlaskApp:
             self.logger.debug(f"JSONified results: {jsonified_results}")
             return jsonified_results
 
-        @self.app.route('/get_saved_list_items', methods=['POST'])
+        @self.app.route('/save_list', methods=['POST'])
+        def save_list():
+            try:
+                data = request.json
+                username = current_user.get_id() if current_user else None
+                list_name = data.get('list_name')
+                movie_ids = data.get('movie_ids')
+
+                bq_movie_ids = self.bq_user_manager.save_list_of_movie_ids(
+                    username=username, 
+                    list_name=list_name,
+                    movie_ids=movie_ids
+                )
+                self.logger.debug(f"bq_movie_ids saved to {username}'s list '{list_name}': {bq_movie_ids}")
+
+                jsonified_results = jsonify("Finished saving list")
+                return jsonified_results, 200
+            
+            except Exception as e:
+                self.logger.error(f"Error in save_list(): {e}")
+                return jsonify({'error': 'An unexpected error occurred'}), 500
+
+        @self.app.route('/fetch_saved_list_items', methods=['POST'])
         def get_saved_list_items():
             try:
                 data = request.json
                 username = current_user.get_id() if current_user else None
                 list_name = data.get('list_name')
-                bq_movie_ids = self.bq_user_manager.get_saved_lists_movie_ids(
+                bq_movie_ids = self.bq_user_manager.get_saved_list_movie_ids(
                     username=username, 
                     list_name=list_name
                     )

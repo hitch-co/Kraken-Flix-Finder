@@ -14,7 +14,7 @@ def get_bq_schemas():
         bigquery.SchemaField("username", "STRING"),
         bigquery.SchemaField("list_name", "STRING"),
         bigquery.SchemaField("movie_id", "INTEGER"),
-        bigquery.SchemaField("date_created", "DATETIME"),
+        bigquery.SchemaField("is_active", "BOOL"),
     ]
 
     #Schema dictionary for each known budget file

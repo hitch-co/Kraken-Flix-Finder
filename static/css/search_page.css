@@ -5,7 +5,7 @@ body {
     padding-top: 20px;
 }
 
-.login-box, .search-box, .results-box {
+.login-box, .search-box, .results-box, .login-status {
     margin: 10px;
     padding: 20px;
     border: 1px solid #ccc;
@@ -108,7 +108,7 @@ body {
     gap: 5px;
 }
 
-#saveListBtn, #loadListBtn, #saveAsListBtn, #clearListBtn {
+#saveListBtn, #loadListBtn, #saveAsListBtn, #clearListBtn, #removeFromListBtn {
     padding: 5px 10px; /* Adjust padding as needed */
     margin-left: 5px; /* Add some space between buttons */
 }

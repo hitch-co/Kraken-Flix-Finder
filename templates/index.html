@@ -76,11 +76,12 @@
 
         <!-- Group for the buttons -->
         <div class="processed-header-buttons">
-            <button id="removeFromListBtn" onclick="removeSelectedFromProcessedList()">Remove Selected from List</button>
+            <button id="removeFromListBtn" onclick="removeSelectedFromProcessedList()">Remove Selected Items</button>
             <button id="saveListBtn" onclick="saveUpdatedList()">Save List</button>
             <button id="loadListBtn" onclick="fetchAndDisplayListItems()">Load List</button>
             <button id="saveAsListBtn" onclick="saveListAs()">Save List As</button>
             <button id="clearListBtn" onclick="clearList()">Clear List</button>
+            <button id="downloadCsvBtn" onclick="downloadProcessedDataAsJson()">Download JSON</button>
         </div>
 
     </div>
@@ -96,6 +97,46 @@
     window.processedItemsData = [];
     var selectedSearchItems = []
 
+    function downloadProcessedDataAsJson() {
+        console.log('Downloading processed data as JSON');
+        console.log(window.processedItemsData);
+
+        const dataStr = JSON.stringify(window.processedItemsData, null, 4); // The 'null' and '4' arguments format the JSON for readability
+        console.log(dataStr);
+
+        // Create a Blob object representing the data as a JSON file
+        const blob = new Blob([dataStr], { type: "application/json" });
+        // Create a temporary anchor element
+        const a = document.createElement('a');
+        // Create a URL for the blob object
+        const url = URL.createObjectURL(blob);
+        // Set the href attribute of the anchor to the blob URL
+        a.href = url;
+
+        // get list name from the dropdown and timestamp
+        var listName = document.getElementById('saved-lists-dropdown').value;
+        var today = new Date();
+        var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        var hours = today.getHours().toString().padStart(2, '0');
+        var minutes = today.getMinutes().toString().padStart(2, '0');
+        var seconds = today.getSeconds().toString().padStart(2, '0');
+        var dateTime = date + '_' + hours + '-' + minutes + '-' + seconds;
+
+        // Set the download attribute to the desired file name
+        console.log('listName:', listName);
+        console.log('dateTime:', dateTime);
+        a.download = `${listName}_${dateTime}.json`;
+
+        // Append the anchor to the document
+        document.body.appendChild(a);
+
+        // Trigger the download by simulating a click on the anchor
+        a.click();
+        // Clean up by removing the anchor and revoking the blob URL
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+        
     function _saveList(list_name) {
         // Capture input values
         var listName = list_name;

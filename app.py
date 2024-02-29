@@ -145,10 +145,14 @@ class MyFlaskApp:
             data = request.json
             params = {
                 'uinp_movie_name': '%' + data.get('movie_name') + '%',
+                'uinp_actor_name': '%' + data.get('actor_name') + '%',
+                'uinp_director_name': '%' + data.get('director_name') + '%',
                 'uinp_genre_id': data.get('genre_id') or None,
                 'uinp_year_min': data.get('year_min', 0) or None,
-                'uinp_year_max': data.get('year_max', 3000) or None
+                'uinp_year_max': data.get('year_max', 3000) or None,
+                'uinp_actor_name': '%' + data.get('actor_name') + '%' or None
             }
+            self.logger.debug(f"Params: {params}")
 
             # Use the DBExplorer class to query the database
             results = dbexplorer.query_sql(query, params)

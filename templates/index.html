@@ -25,8 +25,16 @@
 <!-- Search Box -->
 <div class="search-box">
     <div class="form-row">
-        <label for="movie_name">Name:</label>
+        <label for="movie_name">Movie Name:</label>
         <input type="text" id="movie_name" name="movie_name">
+    </div>
+    <div class="form-row">
+        <label for="actor_name">Actor Name:</label>
+        <input type="text" id="actor_name" name="actor_name">
+    </div>
+    <div class="form-row">
+        <label for="director_name">Director Name:</label>
+        <input type="text" id="director_name" name="director_name">
     </div>
     <div class="form-row">
         <label for="genre">Genre:</label>
@@ -423,6 +431,8 @@
     function executeSearch() {
         // Capture input values
         var movieName = document.getElementById('movie_name').value;
+        var actorName = document.getElementById('actor_name').value;
+        var directorName = document.getElementById('director_name').value;
         var genreId = document.getElementById('genre').value;
         var yearMin = document.getElementById('year_min').value;
         var yearMax = document.getElementById('year_max').value;
@@ -430,6 +440,8 @@
         // Construct the data object to send
         var searchData = {
             movie_name: movieName,
+            actor_name: actorName,
+            director_name: directorName,
             genre_id: genreId,
             year_min: yearMin,
             year_max: yearMax

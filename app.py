@@ -9,6 +9,8 @@ from classes.BQUserManager import BQUserManager
 from classes.LoggingManager import LoggingManager
 from classes.User import User
 
+yaml_filepath = r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml'
+
 class MyFlaskApp:
     def __init__(
             self, 
@@ -214,6 +216,6 @@ class MyFlaskApp:
 if __name__ == '__main__':
     my_flask_app = MyFlaskApp(
         db_path='./db/MyVideos116/MyVideos116.db',
-        yaml_filepath=r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml'
+        yaml_filepath=yaml_filepath
     )
     my_flask_app.run()

@@ -40,7 +40,7 @@ def main(source, destination_drive, destination_folder = None):
 
 if __name__ == '__main__':
     main(
-        source=r'C:\_repos\crube_videos_database\test\sampledata_source', 
+        source=r'C:\_repos\Kraken-Flix-Finder\test\sampledata_source', 
         destination_drive=r'C', 
-        destination_folder=r'C:\_repos\crube_videos_database\test\sampledata_destination'
+        destination_folder=r'C:\_repos\Kraken-Flix-Finder\test\sampledata_destination'
         )

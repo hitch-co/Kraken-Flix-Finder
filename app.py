@@ -9,7 +9,7 @@ from classes.BQUserManager import BQUserManager
 from classes.LoggingManager import LoggingManager
 from classes.User import User
 
-yaml_filepath = r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml'
+yaml_filepath = r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\Kraken-Flix-Finder\config\config.yaml'
 
 class MyFlaskApp:
     def __init__(

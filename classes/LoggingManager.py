@@ -1,6 +1,7 @@
 import logging
 import functools
 import pprint
+import os
 
 class LoggingManager:
     def __init__(self, dirname='log', logger_name=None, debug_level='DEBUG', mode='w', stream_logs=True, encoding='UTF-8'):
@@ -10,6 +11,10 @@ class LoggingManager:
         self.mode = mode
         self.stream_logs = stream_logs
         self.encoding = encoding
+
+        # make the directory if it doesn't exist
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
 
     def create_logger(self):
         level_mapping = {

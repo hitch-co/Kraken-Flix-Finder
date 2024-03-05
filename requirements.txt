@@ -8,8 +8,12 @@ distlib==0.3.7
 docopt==0.6.2
 filelock==3.13.1
 Flask==3.0.2
+Flask-Login==0.6.3
 google-api-core==2.17.1
 google-auth==2.28.1
+google-cloud-core==2.4.1
+google-crc32c==1.5.0
+google-resumable-media==2.7.0
 googleapis-common-protos==1.62.0
 idna==3.6
 itsdangerous==2.1.2
@@ -22,7 +26,9 @@ protobuf==4.25.3
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 python-dateutil==2.8.2
+python-dotenv==1.0.1
 pytz==2024.1
+PyYAML==6.0.1
 rsa==4.9
 six==1.16.0
 tzdata==2024.1

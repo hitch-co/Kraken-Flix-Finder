@@ -152,7 +152,7 @@ def main(yaml_filepath):
     return config
 
 if __name__ == "__main__":
-    yaml_filepath = r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml'
+    yaml_filepath = r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\Kraken-Flix-Finder\config\config.yaml'
     print(f"yaml_filepath_type: {type(yaml_filepath)}")
     print(yaml_filepath)
     config = main(yaml_filepath)

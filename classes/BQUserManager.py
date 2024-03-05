@@ -507,7 +507,7 @@ class BQUserManager:
         return rows_to_insert   
 
 if __name__ == '__main__':
-    ConfigManager.initialize(r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\crube_videos_database\config\config.yaml')
+    ConfigManager.initialize(r'C:\Users\Admin\OneDrive\Desktop\_work\__repos (unpublished)\_____CONFIG\Kraken-Flix-Finder\config\config.yaml')
     config = ConfigManager.get_instance()
     bq_user_manager = BQUserManager()
 

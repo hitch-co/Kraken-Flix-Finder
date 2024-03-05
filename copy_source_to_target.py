@@ -24,16 +24,16 @@ for i, row in enumerate(results):
 dbfilecopier = DBFileCopier()
 
 #Create dummy items to iterate over
-destination_folder = r'C:\_repos\crube_videos_database\test\sampledata_destination'
+destination_folder = r'C:\_repos\Kraken-Flix-Finder\test\sampledata_destination'
 items = [
-    {'path': r'C:\_repos\crube_videos_database\test\sampledata_source', 'title': 'sampledata_source'},
-    {'path': r'C:\_repos\crube_videos_database\test\sampledata_source', 'title': 'sampledata_destination'}
+    {'path': r'C:\_repos\Kraken-Flix-Finder\test\sampledata_source', 'title': 'sampledata_source'},
+    {'path': r'C:\_repos\Kraken-Flix-Finder\test\sampledata_source', 'title': 'sampledata_destination'}
 ]
 
 # for each path, title in items, gr
 for path, title in items:
-    source = r'C:\_repos\crube_videos_database\test\sampledata_source'
-    destination = r'C:\_repos\crube_videos_database\test\sampledata_destination'
+    source = r'C:\_repos\Kraken-Flix-Finder\test\sampledata_source'
+    destination = r'C:\_repos\Kraken-Flix-Finder\test\sampledata_destination'
     
     dbfilecopier.copy(source=source, destination=destination)
 
